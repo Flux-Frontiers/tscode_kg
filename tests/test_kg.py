@@ -26,7 +26,7 @@ def built_kg(tmp_repo: Path, tmp_path: Path) -> TypeScriptKG:
     kg = TypeScriptKG(
         repo_root=tmp_repo,
         db_path=tmp_path / "graph.sqlite",
-        lancedb_dir=tmp_path / "lancedb",
+        vectors_path=tmp_path / "vectors.sqlite",
     )
     kg.build(wipe=True)
     return kg
@@ -79,5 +79,5 @@ class TestPack:
 class TestAnalyze:
     def test_analyze_returns_markdown(self, built_kg: TypeScriptKG) -> None:
         report = built_kg.analyze()
-        assert "TypeScriptKG Analysis" in report
-        assert "Nodes by Kind" in report
+        assert "TypeScriptKG Repository Analysis" in report
+        assert "Total Nodes" in report

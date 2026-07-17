@@ -101,12 +101,8 @@ _INTERFACE_LIKE = frozenset({"interface_declaration"})
 _TYPE_ALIAS = frozenset({"type_alias_declaration"})
 _ENUM = frozenset({"enum_declaration"})
 _NAMESPACE = frozenset({"module_declaration", "internal_module", "namespace_declaration"})
-_METHOD_LIKE = frozenset(
-    {"method_definition", "method_signature", "public_field_definition"}
-)
-_FUNCTION_LIKE = frozenset(
-    {"function_declaration", "generator_function_declaration"}
-)
+_METHOD_LIKE = frozenset({"method_definition", "method_signature", "public_field_definition"})
+_FUNCTION_LIKE = frozenset({"function_declaration", "generator_function_declaration"})
 _CALL_EXPR = frozenset({"call_expression", "new_expression"})
 
 
@@ -426,9 +422,7 @@ class _FileWalker:
                 docstring=doc,
             )
         )
-        self._emitted.append(
-            EdgeSpec(source_id=class_id, target_id=node_id, relation="CONTAINS")
-        )
+        self._emitted.append(EdgeSpec(source_id=class_id, target_id=node_id, relation="CONTAINS"))
 
         # CALLS edges from method body
         body = node.child_by_field_name("body") or node.child_by_field_name("value")
@@ -468,9 +462,7 @@ class _FileWalker:
         )
 
         # interface extends clause — tree-sitter uses extends_type_clause as direct child
-        extends_clause = next(
-            (c for c in node.children if c.type == "extends_type_clause"), None
-        )
+        extends_clause = next((c for c in node.children if c.type == "extends_type_clause"), None)
         if extends_clause is not None:
             for c in extends_clause.children:
                 if c.type in ("identifier", "type_identifier"):
@@ -801,7 +793,7 @@ class TSCodeExtractor(KGExtractor):
         ]
 
     def meaningful_node_kinds(self) -> list[str]:
-        """Exclude symbol stubs from LanceDB indexing and coverage metrics."""
+        """Exclude symbol stubs from vector indexing and coverage metrics."""
         return [
             "module",
             "class",

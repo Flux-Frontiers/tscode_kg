@@ -8,7 +8,7 @@ TypeScriptKG builds a queryable knowledge graph from TypeScript/JavaScript sourc
 
 - **tree-sitter** for deterministic, parser-level AST extraction (no LLM inference during indexing)
 - **SQLite** for the structural graph (nodes, edges, provenance)
-- **LanceDB** for the semantic vector index (embeddings via `nomic-embed-text-v1.5`)
+- **sqlite-vec** for the semantic vector index (embeddings via `BAAI/bge-small-en-v1.5`)
 - **Hybrid retrieval**: semantic seed → graph hop expansion → lexical re-ranking
 
 ## Node types
@@ -69,9 +69,9 @@ pack.save("context.md")
 
 ## Architecture
 
-TypeScriptKG is a domain implementation of the `KGModule` base class from `pycode-kg`.
+TypeScriptKG is a domain implementation of the `KGModule` base class from `kgmodule-utils`.
 Only the TypeScript/JS-specific extraction layer is implemented here — all generic
-infrastructure (SQLite, LanceDB, hybrid query, snippet packing) is inherited from
+infrastructure (SQLite, sqlite-vec, hybrid query, snippet packing) is inherited from
 `KGModule`.
 
 ## Configuration

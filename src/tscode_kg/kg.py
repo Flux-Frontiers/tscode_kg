@@ -3,7 +3,7 @@
 kg.py — TypeScriptKG: concrete KGModule for TypeScript/JavaScript codebases.
 
 Owns the TS/JS-specific extraction layer (tree-sitter AST) and delegates all
-generic infrastructure (SQLite, LanceDB, hybrid query, snippet packing,
+generic infrastructure (SQLite, sqlite-vec, hybrid query, snippet packing,
 snapshots) to the KGModule base class from kg_utils.pipeline.
 
 Author: Eric G. Suchanek, PhD
@@ -56,7 +56,7 @@ class TypeScriptKG(KGModule):
 
     Subclasses :class:`~kg_utils.pipeline.KGModule` and provides the
     TypeScript/JS-specific extraction layer via :class:`~tscode_kg.extractor.TSCodeExtractor`.
-    All generic infrastructure — SQLite persistence, LanceDB indexing,
+    All generic infrastructure — SQLite persistence, sqlite-vec indexing,
     hybrid query, snippet packing — is inherited from KGModule.
 
     Typical usage::
@@ -71,9 +71,9 @@ class TypeScriptKG(KGModule):
 
     :param repo_root: Repository root directory.
     :param db_path: SQLite database path (defaults to ``<repo_root>/.tscodekg/graph.sqlite``).
-    :param lancedb_dir: LanceDB directory (defaults to ``<repo_root>/.tscodekg/lancedb``).
+    :param vectors_path: sqlite-vec store path (defaults to ``<repo_root>/.tscodekg/vectors.sqlite``).
     :param model: Sentence-transformer model name.
-    :param table: LanceDB table name.
+    :param table: sqlite-vec table name.
     """
 
     _default_dir = ".tscodekg"
@@ -82,7 +82,7 @@ class TypeScriptKG(KGModule):
         self,
         repo_root: str | Path,
         db_path: str | Path | None = None,
-        lancedb_dir: str | Path | None = None,
+        vectors_path: str | Path | None = None,
         *,
         model: str = DEFAULT_MODEL,
         table: str = "tscodekg_nodes",
@@ -90,10 +90,12 @@ class TypeScriptKG(KGModule):
         super().__init__(
             repo_root,
             db_path=db_path,
-            lancedb_dir=lancedb_dir,
             model=model,
             table=table,
+            vector_backend="sqlite-vec",
         )
+        if vectors_path is not None:
+            self.vectors_path = Path(vectors_path)
 
     # ------------------------------------------------------------------
     # KGModule abstract interface
@@ -141,7 +143,7 @@ class TypeScriptKG(KGModule):
         return (
             f"TypeScriptKG(repo_root={self.repo_root!r}, "
             f"db_path={self.db_path!r}, "
-            f"lancedb_dir={self.lancedb_dir!r}, "
+            f"vectors_path={self.vectors_path!r}, "
             f"model={self.model_name!r})"
         )
 

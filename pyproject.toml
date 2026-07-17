@@ -28,7 +28,7 @@ packages = [{ include = "tscode_kg", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
 detect-secrets = ">=1.5.0"
-mypy = ">=1.10.0"
+ty = ">=0.0.41"
 pre-commit = ">=4.5.1"
 pylint = ">=4.0.5"
 pytest = ">=8.0.0"
@@ -44,7 +44,7 @@ license = "Elastic-2.0"
 authors = [
     { name = "Eric G. Suchanek, PhD", email = "suchanek@mac.com" }
 ]
-keywords = ["knowledge-graph", "typescript", "javascript", "ast", "lancedb", "sqlite", "semantic-search"]
+keywords = ["knowledge-graph", "typescript", "javascript", "ast", "sqlite-vec", "sqlite", "semantic-search"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -65,18 +65,23 @@ dependencies = [
     "rich>=14.3.3,<15",
     "kgmodule-utils>=0.6.2",
     "click>=8.1.0,<9",
-    "kgmodule-utils[semantic]>=0.6.2",
 ]
 
 [project.optional-dependencies]
-# Full KG: SQLite graph store + LanceDB vector index + hybrid query + MCP server
+# Full KG: SQLite graph store + sqlite-vec vector index + hybrid query + MCP server
 kg = [
-    "kgmodule-utils[semantic]>=0.6.2",
+    "kgmodule-utils[semantic,sqlite-vec]>=0.6.2",
     "mcp>=1.0.0",
+    "networkx>=3.0",
+]
+# Cross-KG: PyCodeKG (Python codebases) and DocKG (docs) available from within tscode_kg
+kgdeps = [
+    "pycode-kg>=0.20.0",
+    "doc-kg>=0.18.1",
 ]
 dev = [
     "detect-secrets>=1.5.0",
-    "mypy>=1.10.0",
+    "ty>=0.0.41",
     "pre-commit>=4.5.1",
     "pylint>=4.0.5",
     "pytest>=8.0.0",
@@ -103,19 +108,19 @@ target-version = "py312"
 select = ["E", "F", "W", "I", "UP"]
 ignore = ["E501"]
 
-[tool.mypy]
-python_version         = "3.12"
-strict                 = false
-ignore_missing_imports = true
-mypy_path              = "src"
-explicit_package_bases = true
+[tool.ty.environment]
+python-version = "3.12"
+root = ["src"]
+
+[tool.ty.rules]
+unresolved-import = "ignore"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts   = "-v --tb=short"
 markers = [
     "slow: marks tests as slow",
-    "integration: marks tests that require real model/LanceDB",
+    "integration: marks tests that require real model/sqlite-vec",
 ]
 
 [tool.tscodekg]

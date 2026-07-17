@@ -10,11 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from tscode_kg.extractor import TSCodeExtractor, _HAS_TREE_SITTER
+from tscode_kg.extractor import _HAS_TREE_SITTER, TSCodeExtractor
 
-pytestmark = pytest.mark.skipif(
-    not _HAS_TREE_SITTER, reason="tree-sitter-typescript not installed"
-)
+pytestmark = pytest.mark.skipif(not _HAS_TREE_SITTER, reason="tree-sitter-typescript not installed")
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 

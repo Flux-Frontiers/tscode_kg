@@ -16,10 +16,10 @@ import click
     help="SQLite database path.",
 )
 @click.option(
-    "--lancedb",
-    default=".tscodekg/lancedb",
+    "--vectors",
+    default=".tscodekg/vectors.sqlite",
     show_default=True,
-    help="LanceDB directory.",
+    help="sqlite-vec store path.",
 )
 @click.option(
     "--transport",
@@ -28,8 +28,8 @@ import click
     type=click.Choice(["stdio", "sse"]),
     help="MCP transport.",
 )
-def mcp_cmd(repo: str, db: str, lancedb: str, transport: str) -> None:
+def mcp_cmd(repo: str, db: str, vectors: str, transport: str) -> None:
     """Launch the TypeScriptKG MCP server."""
     from tscode_kg.mcp_server import main  # pylint: disable=import-outside-toplevel
 
-    main(["--repo", repo, "--db", db, "--lancedb", lancedb, "--transport", transport])
+    main(["--repo", repo, "--db", db, "--vectors", vectors, "--transport", transport])

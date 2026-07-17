@@ -12,8 +12,8 @@ using TypeScriptKG's graph traversal capabilities. Analyzes:
 - Exported public API surface
 
 Operational behaviour:
-- Entry point defaults: resolves ``repo_root`` and defaults ``db_path``/``lancedb_dir``
-  to ``.tscodekg/graph.sqlite`` and ``.tscodekg/lancedb``.
+- Entry point defaults: resolves ``repo_root`` and defaults ``db_path``/``vectors_path``
+  to ``.tscodekg/graph.sqlite`` and ``.tscodekg/vectors.sqlite``.
 - Logging: Rich console for user-facing status; ``logging`` for diagnostics.
 - Error handling: degrades gracefully when optional data is missing.
 
@@ -233,9 +233,13 @@ class TSCodeKGAnalyzer:
 
             if persist_centrality and self.centrality_records:
                 try:
-                    from pycode_kg.analysis.centrality import StructuralImportanceRanker  # noqa: PLC0415
+                    from pycode_kg.analysis.centrality import (
+                        StructuralImportanceRanker,  # noqa: PLC0415
+                    )
 
-                    StructuralImportanceRanker(self.kg.db_path).write_scores(self.centrality_records)
+                    StructuralImportanceRanker(self.kg.db_path).write_scores(
+                        self.centrality_records
+                    )
                 except (ImportError, AttributeError, ValueError, RuntimeError):
                     pass
 
@@ -267,7 +271,10 @@ class TSCodeKGAnalyzer:
     def _compute_coderank(self) -> None:
         """Phase 2: Compute global CodeRank (weighted PageRank) over the graph."""
         try:
-            from pycode_kg.ranking.coderank import build_code_graph, compute_coderank  # noqa: PLC0415
+            from pycode_kg.ranking.coderank import (  # noqa: PLC0415
+                build_code_graph,
+                compute_coderank,
+            )
 
             graph = build_code_graph(
                 str(self.kg.db_path),
@@ -300,7 +307,9 @@ class TSCodeKGAnalyzer:
 
             self.coderank_top_nodes = top_nodes
             if top_nodes:
-                self._phase_result = f"{len(self.coderank_scores)} nodes  top=`{top_nodes[0]['name']}`"
+                self._phase_result = (
+                    f"{len(self.coderank_scores)} nodes  top=`{top_nodes[0]['name']}`"
+                )
             else:
                 self._phase_result = f"{len(self.coderank_scores)} nodes"
 
@@ -713,10 +722,23 @@ class TSCodeKGAnalyzer:
                         # export default function foo / export default class Foo
                         tokens = stripped.split()
                         for i, tok in enumerate(tokens):
-                            if tok in ("function", "class", "interface", "type", "enum", "const", "let", "var"):
+                            if tok in (
+                                "function",
+                                "class",
+                                "interface",
+                                "type",
+                                "enum",
+                                "const",
+                                "let",
+                                "var",
+                            ):
                                 if i + 1 < len(tokens):
                                     candidate = tokens[i + 1].rstrip("(<{:=")
-                                    if candidate and candidate[0].isalpha() or candidate.startswith("_"):
+                                    if (
+                                        candidate
+                                        and candidate[0].isalpha()
+                                        or candidate.startswith("_")
+                                    ):
                                         export_names.add(candidate)
                                 break
                 except OSError:
@@ -755,7 +777,9 @@ class TSCodeKGAnalyzer:
                     already_ids.add(node_id)
 
             # Step 2: supplement from high fan-in function_metrics
-            for func in sorted(self.function_metrics.values(), key=lambda m: m.fan_in, reverse=True):
+            for func in sorted(
+                self.function_metrics.values(), key=lambda m: m.fan_in, reverse=True
+            ):
                 if (
                     func.kind in ("function", "class")
                     and func.fan_in >= 1
@@ -822,9 +846,15 @@ class TSCodeKGAnalyzer:
         try:
             con = self.kg.store.con
 
-            inherits_rows = con.execute("SELECT src, dst FROM edges WHERE rel = 'INHERITS'").fetchall()
-            implements_rows = con.execute("SELECT src, dst FROM edges WHERE rel = 'IMPLEMENTS'").fetchall()
-            extends_rows = con.execute("SELECT src, dst FROM edges WHERE rel = 'EXTENDS'").fetchall()
+            inherits_rows = con.execute(
+                "SELECT src, dst FROM edges WHERE rel = 'INHERITS'"
+            ).fetchall()
+            implements_rows = con.execute(
+                "SELECT src, dst FROM edges WHERE rel = 'IMPLEMENTS'"
+            ).fetchall()
+            extends_rows = con.execute(
+                "SELECT src, dst FROM edges WHERE rel = 'EXTENDS'"
+            ).fetchall()
 
             total_edges = len(inherits_rows) + len(implements_rows) + len(extends_rows)
 
@@ -938,7 +968,11 @@ class TSCodeKGAnalyzer:
             self.strengths.append("No obvious dead code detected")
         else:
             names = ", ".join(f"`{f.name}`" for f in self.orphaned_functions[:5])
-            suffix = f" (and {len(self.orphaned_functions) - 5} more)" if len(self.orphaned_functions) > 5 else ""
+            suffix = (
+                f" (and {len(self.orphaned_functions) - 5} more)"
+                if len(self.orphaned_functions) > 5
+                else ""
+            )
             self.issues.append(
                 f"[WARN] {len(self.orphaned_functions)} orphaned declarations: {names}{suffix} — "
                 "zero callers detected; verify these aren't dead code"
@@ -1024,7 +1058,8 @@ class TSCodeKGAnalyzer:
                 and (
                     len(self.module_metrics[path].incoming_deps)
                     + len(self.module_metrics[path].outgoing_deps)
-                ) > 4
+                )
+                > 4
             ]
             if risky:
                 names = ", ".join(f"`{m['module_path'].split('/')[-1]}`" for m in risky[:3])
@@ -1058,9 +1093,7 @@ class TSCodeKGAnalyzer:
             all_records = ranker.compute()
             self.centrality_records = all_records[:25]
             self.centrality_modules = aggregate_module_scores(all_records)
-            self._phase_result = (
-                f"{len(all_records)} nodes  {len(self.centrality_modules)} modules"
-            )
+            self._phase_result = f"{len(all_records)} nodes  {len(self.centrality_modules)} modules"
         except (AttributeError, ValueError, RuntimeError, ImportError) as exc:
             logger.warning("Centrality analysis incomplete: %s", exc)
             self.console.print(f"[yellow]WARN[/yellow] Centrality incomplete: {exc}")
@@ -1137,7 +1170,11 @@ class TSCodeKGAnalyzer:
 
         if self.orphaned_functions:
             names = ", ".join(f"`{f.name}`" for f in self.orphaned_functions[:5])
-            suffix = f" (and {len(self.orphaned_functions) - 5} more)" if len(self.orphaned_functions) > 5 else ""
+            suffix = (
+                f" (and {len(self.orphaned_functions) - 5} more)"
+                if len(self.orphaned_functions) > 5
+                else ""
+            )
             immediate.append(
                 f"**Audit orphaned declarations** — {names}{suffix} have zero callers; "
                 "remove dead code or add tests/usage"
@@ -1160,7 +1197,8 @@ class TSCodeKGAnalyzer:
 
         if self.module_metrics:
             tightly_coupled = [
-                m for m in self.module_metrics.values()
+                m
+                for m in self.module_metrics.values()
                 if len(m.incoming_deps) + len(m.outgoing_deps) > 5
             ]
             if tightly_coupled:
@@ -1236,7 +1274,9 @@ class TSCodeKGAnalyzer:
             try:
                 result = subprocess.run(
                     ["git", "rev-parse", "--short", "HEAD"],
-                    capture_output=True, text=True, timeout=5,
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
                 )
                 if result.returncode == 0:
                     commit = result.stdout.strip()
@@ -1247,12 +1287,14 @@ class TSCodeKGAnalyzer:
         branch = ""
         github_ref = os.environ.get("GITHUB_REF", "")
         if github_ref.startswith("refs/heads/"):
-            branch = github_ref[len("refs/heads/"):]
+            branch = github_ref[len("refs/heads/") :]
         if not branch:
             try:
                 result = subprocess.run(
                     ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-                    capture_output=True, text=True, timeout=5,
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
                 )
                 if result.returncode == 0:
                     branch = result.stdout.strip()
@@ -1384,7 +1426,9 @@ Functions that call many others may indicate complex orchestration or poor separ
                 sorted(self.high_fanout_functions, key=lambda f: f.fan_out, reverse=True)[:10], 1
             ):
                 func_type = "Orchestrator" if func.fan_out > 40 else "Coordinator"
-                report += f"| {i} | `{func.name}` | {func.module} | **{func.fan_out}** | {func_type} |\n"
+                report += (
+                    f"| {i} | `{func.name}` | {func.module} | **{func.fan_out}** | {func_type} |\n"
+                )
             report += "\n"
         else:
             report += "No extreme high fan-out functions detected. Well-balanced architecture.\n\n"
@@ -1470,10 +1514,10 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
                 "Cross-module edges boosted 1.5×; private symbols penalized 0.85×.\n\n"
             )
             report += "| Rank | Score | Members | Module |\n|---|---|---|---|\n"
-            for m in self.centrality_modules[:12]:
+            for mod in self.centrality_modules[:12]:
                 report += (
-                    f"| {m['rank']} | {m['score']:.6f} | {m['member_count']} "
-                    f"| `{m['module_path']}` |\n"
+                    f"| {mod['rank']} | {mod['score']:.6f} | {mod['member_count']} "
+                    f"| `{mod['module_path']}` |\n"
                 )
             report += "\n"
         else:
@@ -1499,11 +1543,13 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
         # Issues / Strengths
         issues_text = (
             "\n".join(f"- {issue}" for issue in self.issues)
-            if self.issues else "- No major issues detected"
+            if self.issues
+            else "- No major issues detected"
         )
         strengths_text = (
             "\n".join(f"- {s}" for s in self.strengths)
-            if self.strengths else "- Continue monitoring code quality"
+            if self.strengths
+            else "- Continue monitoring code quality"
         )
 
         report += f"""---
@@ -1552,7 +1598,9 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
                     report += f"| `{impl['class']}` | `{impl['interface']}` | {impl['module']} |\n"
                 report += "\n"
             if inh.get("multiple_inheritance"):
-                report += f"### Multiple Inheritance ({len(inh['multiple_inheritance'])} classes)\n\n"
+                report += (
+                    f"### Multiple Inheritance ({len(inh['multiple_inheritance'])} classes)\n\n"
+                )
                 for mi in inh["multiple_inheritance"]:
                     bases = ", ".join(f"`{b}`" for b in mi["bases"])
                     report += f"- `{mi['class']}` ({mi['module']}) extends {bases}\n"
@@ -1573,7 +1621,9 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
             report += "No snapshots. Run `tscodekg snapshot save <version>` to capture one.\n"
 
         # Orphaned code appendix
-        report += "\n---\n\n## Appendix: Orphaned Declarations\n\nDeclarations with zero callers:\n\n"
+        report += (
+            "\n---\n\n## Appendix: Orphaned Declarations\n\nDeclarations with zero callers:\n\n"
+        )
         if self.orphaned_functions:
             report += "| Name | Kind | Module | Lines |\n|---|---|---|---|\n"
             for func in sorted(self.orphaned_functions, key=lambda f: f.lines, reverse=True)[:15]:
@@ -1582,11 +1632,11 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
             report += "No orphaned declarations detected.\n"
 
         elapsed_str = (
-            f"{elapsed_seconds:.1f}s"
-            if elapsed_seconds < 60
-            else f"{elapsed_seconds / 60:.1f}m"
+            f"{elapsed_seconds:.1f}s" if elapsed_seconds < 60 else f"{elapsed_seconds / 60:.1f}m"
         )
-        report += f"\n\n---\n\n*Report generated by TypeScriptKG analysis — completed in {elapsed_str}*\n"
+        report += (
+            f"\n\n---\n\n*Report generated by TypeScriptKG analysis — completed in {elapsed_str}*\n"
+        )
 
         Path(report_path).write_text(report, encoding="utf-8")
         self.console.print(f"[green]✓[/green] Report written to {report_path}")

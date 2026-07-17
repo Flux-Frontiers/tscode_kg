@@ -40,10 +40,9 @@ import json
 import sys
 from pathlib import Path
 
+from kg_utils.semantic import DEFAULT_MODEL
+from kg_utils.store import DEFAULT_RELS
 from mcp.server.fastmcp import FastMCP
-
-from pycode_kg.pycodekg import DEFAULT_MODEL
-from pycode_kg.store import DEFAULT_RELS
 
 from tscode_kg.kg import TypeScriptKG
 
@@ -57,8 +56,7 @@ _kg: TypeScriptKG | None = None
 def _get_kg() -> TypeScriptKG:
     if _kg is None:
         raise RuntimeError(
-            "TypeScriptKG not initialised. "
-            "Run the server via 'tscodekg-mcp --repo /path/to/repo'"
+            "TypeScriptKG not initialised. Run the server via 'tscodekg-mcp --repo /path/to/repo'"
         )
     return _kg
 
@@ -474,9 +472,9 @@ def _parse_args(argv: list | None = None) -> argparse.Namespace:
         help="Path to the SQLite knowledge graph",
     )
     p.add_argument(
-        "--lancedb",
-        default=".tscodekg/lancedb",
-        help="Path to the LanceDB vector index directory",
+        "--vectors",
+        default=".tscodekg/vectors.sqlite",
+        help="Path to the sqlite-vec vector store",
     )
     p.add_argument(
         "--model",
@@ -500,12 +498,11 @@ def main(argv: list | None = None) -> None:
 
     repo = Path(args.repo).resolve()
     db = Path(args.db) if Path(args.db).is_absolute() else repo / args.db
-    lancedb_dir = Path(args.lancedb) if Path(args.lancedb).is_absolute() else repo / args.lancedb
+    vectors = Path(args.vectors) if Path(args.vectors).is_absolute() else repo / args.vectors
 
     if not db.exists():
         print(
-            f"WARNING: SQLite database not found at '{db}'.\n"
-            "Run 'tscodekg build --repo .' first.",
+            f"WARNING: SQLite database not found at '{db}'.\nRun 'tscodekg build --repo .' first.",
             file=sys.stderr,
         )
 
@@ -513,13 +510,13 @@ def main(argv: list | None = None) -> None:
         f"TypeScriptKG MCP server starting\n"
         f"  repo     : {repo}\n"
         f"  db       : {db}\n"
-        f"  lancedb  : {lancedb_dir}\n"
+        f"  vectors  : {vectors}\n"
         f"  model    : {args.model}\n"
         f"  transport: {args.transport}",
         file=sys.stderr,
     )
 
-    _kg = TypeScriptKG(repo_root=repo, db_path=db, lancedb_dir=lancedb_dir, model=args.model)
+    _kg = TypeScriptKG(repo_root=repo, db_path=db, vectors_path=vectors, model=args.model)
     mcp.run(transport=args.transport)
 
 

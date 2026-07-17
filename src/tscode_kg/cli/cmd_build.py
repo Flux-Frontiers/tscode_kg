@@ -1,7 +1,7 @@
 """
 cli/cmd_build.py — tscodekg build command.
 
-Builds the SQLite graph and LanceDB vector index from a TypeScript/JS repo.
+Builds the SQLite graph and sqlite-vec vector index from a TypeScript/JS repo.
 """
 
 from __future__ import annotations
@@ -22,9 +22,9 @@ console = Console()
     help="SQLite database path (default: <repo>/.tscodekg/graph.sqlite).",
 )
 @click.option(
-    "--lancedb",
+    "--vectors",
     default=None,
-    help="LanceDB directory (default: <repo>/.tscodekg/lancedb).",
+    help="sqlite-vec store path (default: <repo>/.tscodekg/vectors.sqlite).",
 )
 @click.option("--wipe", is_flag=True, default=False, help="Clear existing data before building.")
 @click.option(
@@ -42,7 +42,7 @@ console = Console()
 def build(
     repo: str,
     db: str | None,
-    lancedb: str | None,
+    vectors: str | None,
     wipe: bool,
     graph_only: bool,
     index_only: bool,
@@ -58,13 +58,13 @@ def build(
     kg = TypeScriptKG(
         repo_root=repo_path,
         db_path=db,
-        lancedb_dir=lancedb,
+        vectors_path=vectors,
     )
 
-    console.print(f"[bold]TypeScriptKG build[/bold]")
+    console.print("[bold]TypeScriptKG build[/bold]")
     console.print(f"  repo    : {repo_path}")
     console.print(f"  db      : {kg.db_path}")
-    console.print(f"  lancedb : {kg.lancedb_dir}")
+    console.print(f"  vectors : {kg.vectors_path}")
     console.print(f"  wipe    : {wipe}")
     console.print()
 

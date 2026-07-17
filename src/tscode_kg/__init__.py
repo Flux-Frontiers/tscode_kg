@@ -1,7 +1,7 @@
 """
 tscode_kg: Knowledge graph for TypeScript/JavaScript codebases.
 
-Pure tree-sitter AST extraction → SQLite (authoritative) → LanceDB (semantic index).
+Pure tree-sitter AST extraction → SQLite (authoritative) → sqlite-vec (semantic index).
 
 Primary entry point::
 
