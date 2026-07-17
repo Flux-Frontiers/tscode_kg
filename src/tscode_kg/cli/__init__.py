@@ -1,0 +1,1 @@
+"""TypeScriptKG CLI package."""
