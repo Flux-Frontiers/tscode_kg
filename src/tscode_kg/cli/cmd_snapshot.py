@@ -86,6 +86,34 @@ def save_snapshot(
     Example:
         tscodekg snapshot save 0.1.0 --repo .
     """
+    capture_snapshot(
+        version=version,
+        repo=repo,
+        db=db,
+        snapshots_dir=snapshots_dir,
+        branch=branch,
+        tree_hash=tree_hash,
+    )
+
+
+def capture_snapshot(
+    *,
+    version: str | None,
+    repo: str,
+    db: str | None,
+    snapshots_dir: str | None,
+    branch: str | None,
+    tree_hash: str,
+) -> None:
+    """Capture and persist a snapshot; shared by ``snapshot save`` and ``init``.
+
+    :param version: Version tag; auto-detected from the package when falsy.
+    :param repo: Repository root path.
+    :param db: SQLite graph path; defaults to ``<repo>/.tscodekg/graph.sqlite``.
+    :param snapshots_dir: Snapshots directory; defaults to ``<repo>/.tscodekg/snapshots``.
+    :param branch: Branch name; auto-detected when ``None``.
+    :param tree_hash: Git tree hash; auto-detected when empty.
+    """
     from tscode_kg.kg import TypeScriptKG  # pylint: disable=import-outside-toplevel
     from tscode_kg.snapshots import SnapshotManager  # pylint: disable=import-outside-toplevel
 

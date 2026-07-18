@@ -18,7 +18,11 @@ from __future__ import annotations
 import click
 
 from tscode_kg.cli.cmd_analyze import analyze
+from tscode_kg.cli.cmd_bridges import bridges
 from tscode_kg.cli.cmd_build import build
+from tscode_kg.cli.cmd_centrality import centrality
+from tscode_kg.cli.cmd_explain import explain
+from tscode_kg.cli.cmd_framework_nodes import framework_nodes
 from tscode_kg.cli.cmd_hooks import install_hooks
 from tscode_kg.cli.cmd_init import init
 from tscode_kg.cli.cmd_mcp import mcp_cmd
@@ -38,6 +42,10 @@ cli.add_command(build)
 cli.add_command(query)
 cli.add_command(pack)
 cli.add_command(analyze)
+cli.add_command(explain)
+cli.add_command(centrality)
+cli.add_command(bridges)
+cli.add_command(framework_nodes)
 cli.add_command(snapshot)
 cli.add_command(install_hooks)
 cli.add_command(download_model)

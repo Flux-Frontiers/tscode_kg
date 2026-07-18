@@ -85,9 +85,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   KG_utils.
 - **`tests/test_snapshots.py`** — snapshot capture/save/list/diff round-trip
   tests.
+- **`tscode_kg/explain.py`** — shared `render_explain` presenter (metadata,
+  JSDoc, callers, callees, kind-aware role labels) backing both the CLI and
+  MCP `explain` surfaces; role heuristics adapted to TS/JS (interfaces,
+  type-level declarations, JS runtime protocol members).
+- **`tscode_kg/bridge.py`** — module connectivity (bridge centrality), and
+  **`tscode_kg/framework_detector.py`** — framework-like hub detection
+  (0.6 × SIR + 0.4 × connectivity), both ported from PyCodeKG.
+- **Seven MCP tools completing PyCodeKG tool parity (19 total)**:
+  `bridge_centrality`, `framework_nodes`, `find_definition_at`, `explain`,
+  `rank_nodes`, `query_ranked`, `explain_rank` — signatures mirror PyCodeKG
+  (rank tools default to the TS relation set incl. IMPLEMENTS/EXTENDS).
+- **Four CLI commands**: `explain`, `centrality` (+ `tscodekg-centrality`
+  alias), `bridges`, `framework-nodes`.
+- **Repo/doc parity**: `CLAUDE.md`, `CITATION.cff`, and a `docs/` set
+  (INSTALLATION, MCP, CHEATSHEET, SNAPSHOTS, CODERANK, Analyze,
+  pull_request_template) adapted from PyCodeKG.
+- **`skills/` directory** with repo-local Claude Code skills: `tscodekg`
+  (+ installation/cheatsheet references), `tscodekg-thorough-analysis`,
+  `setup-tscodekg-mcp`, `sync-mcp-docs`, `changelog-commit`, `release`.
+- **Tests**: `test_centrality.py`, `test_coderank.py`, `test_explain.py`,
+  `test_bridge.py`, `test_exclusions.py` adapted from PyCodeKG's suite.
 
 ### Fixed
 
+- **MCP `analyze_repo` wrote Rich phase output to stdout**, which carries the
+  MCP protocol on the stdio transport; the analyzer now runs against a silent
+  console (matching PyCodeKG) and falls back to a stats-only report instead
+  of re-running the noisy analyzer.
 - **`.gitignore` ignored `.tscodekg/snapshots/` and `**/.tscodekg/`
   wholesale**, which would have made the pre-commit hook's
   `git add .tscodekg/snapshots/` a silent no-op. Now only generated

@@ -212,11 +212,11 @@ def init(
             branch = None
 
         from tscode_kg.cli.cmd_snapshot import (  # pylint: disable=import-outside-toplevel
-            save_snapshot,
+            capture_snapshot,
         )
 
         try:
-            save_snapshot.callback(
+            capture_snapshot(
                 version="",
                 repo=str(repo_root),
                 db=None,

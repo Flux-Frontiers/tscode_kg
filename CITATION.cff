@@ -1,0 +1,30 @@
+cff-version: "1.2.0"
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "TypeScriptKG: Semantic Knowledge Graph for TypeScript/JavaScript Codebases"
+abstract: >
+  TypeScriptKG builds a hybrid semantic + structural knowledge graph from
+  TypeScript and JavaScript repositories. It indexes every module, class,
+  interface, type alias, enum, function, and method as a node, with typed edges
+  (CALLS, IMPORTS, CONTAINS, INHERITS, IMPLEMENTS, EXTENDS) connecting them,
+  enabling natural-language querying, call-chain analysis, architectural
+  introspection, and MCP-based AI integration.
+authors:
+  - family-names: Suchanek
+    given-names: "Eric G., PhD"
+    orcid: "https://orcid.org/0009-0009-0891-1507"
+    email: suchanek@flux-frontiers.com
+    affiliation: "Flux-Frontiers"
+version: "0.1.0"
+license-url: "https://www.elastic.co/licensing/elastic-license"
+repository-code: "https://github.com/Flux-Frontiers/tscode_kg"
+url: "https://github.com/Flux-Frontiers/tscode_kg"
+keywords:
+  - knowledge-graph
+  - code-analysis
+  - typescript
+  - javascript
+  - tree-sitter
+  - semantic-search
+  - sqlite-vec
+  - mcp

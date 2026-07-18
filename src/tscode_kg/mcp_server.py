@@ -33,8 +33,29 @@ find_node(name, kind)
 centrality(top, kinds, group_by)
     SIR PageRank — rank nodes or modules by structural importance.
 
+bridge_centrality(top, include_imports)
+    Module connectivity — unique module interactions per module.
+
+framework_nodes(top)
+    Framework-like hub modules via SIR + module connectivity.
+
+find_definition_at(file, line)
+    Reverse-resolve a (file, line) location to a node and explain it.
+
 analyze_repo()
     Run structural analysis and return a Markdown report.
+
+explain(node_id, limit)
+    Natural-language explanation of a node: callers, callees, role.
+
+rank_nodes(top, rels, persist_metric, exclude_tests)
+    Global weighted CodeRank (PageRank) over the repository graph.
+
+query_ranked(q, k, mode, top, rels, radius, exclude_tests)
+    CodeRank-enhanced hybrid or personalized-PageRank query ranking.
+
+explain_rank(node_id, q)
+    Explain the CodeRank score components for a specific node.
 
 snapshot_list(limit, branch)
     List saved temporal metric snapshots, most recent first.
@@ -148,8 +169,23 @@ mcp = FastMCP(
         "deterministic weighted PageRank over the graph. group_by='node' ranks individual "
         "nodes; group_by='module' aggregates per module. Use to find hotspots before "
         "refactoring or review.\n\n"
+        "**bridge_centrality(top, include_imports)** — Module connectivity: how many unique "
+        "modules each module calls or is called by. Identifies orchestrator/hub modules.\n\n"
+        "**framework_nodes(top)** — Framework-like hub modules: 0.6 × SIR + 0.4 × "
+        "connectivity (both normalized). Surfaces the repo-defining abstractions.\n\n"
+        "**find_definition_at(file, line)** — Reverse-resolve a (file, line) location to the "
+        "innermost enclosing node and return its explain() report.\n\n"
         "**analyze_repo()** — Structural analysis: node counts, edge counts, JSDoc coverage, "
         "node distribution by kind.\n\n"
+        "**explain(node_id, limit)** — Natural-language Markdown explanation of a node: "
+        "metadata, JSDoc, callers, callees, and its role in the codebase.\n\n"
+        "**rank_nodes(top, rels, persist_metric, exclude_tests)** — Global weighted CodeRank "
+        "(PageRank). Returns the most structurally important nodes as JSON.\n\n"
+        "**query_ranked(q, k, mode, top, rels, radius, exclude_tests)** — Query ranking that "
+        "combines semantic seeds with centrality and graph proximity ('hybrid') or "
+        "personalized PageRank ('ppr'); results include 'why' explanations.\n\n"
+        "**explain_rank(node_id, q)** — Break down a node's CodeRank score: global rank, "
+        "inbound/outbound structural edges, and optional query-conditioned scores.\n\n"
         "**snapshot_list(limit, branch)** — List saved temporal metric snapshots (most recent "
         "first) with per-snapshot deltas and freshness vs. the live graph.\n\n"
         "**snapshot_show(key)** — Full details of one snapshot; pass 'latest' (default) for "
@@ -649,16 +685,558 @@ def centrality(
 
 
 @mcp.tool()
+def bridge_centrality(
+    top: int = 20,
+    include_imports: bool = True,
+) -> str:
+    """
+    Compute module connectivity: how many unique modules each module interacts with.
+
+    For well-modularized codebases, identifies orchestrator and hub modules that
+    touch many other modules. Replaces betweenness centrality (which is meaningless
+    when inter-module edges are zero).
+
+    **Connectivity score** = (unique modules called + unique modules calling this) / 30 + frequency / 50
+    Higher score = more complex coupling with other modules.
+
+    Scores are persisted to the ``centrality_scores`` table under the
+    ``module_connectivity`` metric for use by ``framework_nodes()``.
+
+    :param top: Number of top connectivity modules to return (default 20).
+    :param include_imports: Whether to include IMPORTS in connectivity (default True).
+    :return: Markdown-formatted ranking table of modules by connectivity.
+    """
+    try:
+        from tscode_kg.bridge import compute_bridge_centrality  # noqa: PLC0415
+
+        db_path = str(_get_kg().db_path)
+        modules = compute_bridge_centrality(
+            kind="module",
+            include_imports=include_imports,
+            top=top,
+            db_path=db_path,
+        )
+    except Exception as e:  # noqa: BLE001
+        return f"## Module Connectivity Error\n\nFailed to compute connectivity: `{e}`"
+
+    out: list[str] = ["## Module Connectivity (Interaction Complexity)\n"]
+    out.append(f"**Top:** {top}  |  **Include imports:** {include_imports}\n")
+    out.append("| Rank | Connectivity | Module |")
+    out.append("|-----:|-------------:|--------|")
+    for rank_idx, (mod, score) in enumerate(modules, start=1):
+        out.append(f"| {rank_idx} | {score:.6f} | `{mod}` |")
+    out.append("")
+    out.append(
+        "> Connectivity = unique modules called + unique modules calling this module.  "
+        "Higher score = orchestrator/hub module with complex interactions.  "
+        "Scores are persisted as `module_connectivity` metric for use by `framework_nodes()`."
+    )
+    return "\n".join(out)
+
+
+@mcp.tool()
+def framework_nodes(top: int = 20) -> str:
+    """
+    Identify framework-like (hub) modules using SIR + module connectivity.
+
+    A "framework node" is a module that is both:
+    - Structurally important (high SIR/PageRank — central to the graph)
+    - Highly connected (calls/imports many modules — orchestrator/hub role)
+
+    Framework score = 0.6 × normalized SIR + 0.4 × normalized connectivity,
+    both auto-computed on first call. High-scoring modules are critical hubs:
+    architecturally central AND complex in their interactions.
+
+    :param top: Number of top framework-like modules to return (default 20).
+    :return: Markdown-formatted ranking table of framework nodes.
+    """
+    try:
+        from tscode_kg.bridge import compute_bridge_centrality  # noqa: PLC0415
+        from tscode_kg.centrality import StructuralImportanceRanker  # noqa: PLC0415
+        from tscode_kg.framework_detector import detect_framework_nodes  # noqa: PLC0415
+
+        kg = _get_kg()
+        db_path = str(kg.db_path)
+
+        # Compute and persist SIR scores (structural importance)
+        try:
+            ranker = StructuralImportanceRanker(db_path)
+            records = ranker.compute()
+            ranker.write_scores(records, metric="sir_pagerank")
+        except Exception as e:  # noqa: BLE001
+            return f"## Framework Nodes Error\n\nFailed to compute SIR scores: `{e}`"
+
+        # Compute and persist module connectivity scores (interaction complexity)
+        try:
+            compute_bridge_centrality(kind="module", include_imports=True, top=25, db_path=db_path)
+        except Exception as e:  # noqa: BLE001
+            return f"## Framework Nodes Error\n\nFailed to compute module connectivity: `{e}`"
+
+        # Detect framework nodes by combining both metrics
+        nodes = detect_framework_nodes(limit=top, db_path=db_path)
+    except Exception as e:  # noqa: BLE001
+        return f"## Framework Nodes Error\n\nFailed to detect framework nodes: `{e}`"
+
+    out: list[str] = ["## Framework-like Modules (Critical Hubs)\n"]
+    out.append(f"**Top:** {top}  |  **Score:** 0.6 × SIR + 0.4 × connectivity (both normalized)\n")
+    out.append("| Rank | Score | Module |")
+    out.append("|-----:|------:|--------|")
+    for rank_idx, (_, score, label) in enumerate(nodes, start=1):
+        out.append(f"| {rank_idx} | {score:.6f} | `{label}` |")
+    out.append("")
+    out.append(
+        "> Framework nodes: both architecturally central (SIR) AND heavily connected "
+        "(calls/imports many modules).  High-scoring modules are critical orchestrators/hubs."
+    )
+    return "\n".join(out)
+
+
+@mcp.tool()
+def find_definition_at(file: str, line: int) -> str:
+    """
+    Find the code node whose definition spans a given file location.
+
+    Reverse-resolves a ``(file, line)`` pair to a graph node ID and returns the
+    same Markdown report as ``explain()``.  Useful when reading a file in an IDE
+    and wanting to understand the symbol at a specific line without constructing
+    a node ID manually.
+
+    Matches the innermost (most-specific) function, method, class, interface,
+    type alias, or enum whose ``lineno ≤ line ≤ end_lineno``.  Falls back to
+    the module node when no narrower match exists.
+
+    :param file: Module path as stored in the graph, e.g. ``src/auth/middleware.ts``.
+                 Leading ``./`` is stripped automatically.
+    :param line: Line number (1-indexed) within the file.
+    :return: Markdown explanation from ``explain()``, or an informative error
+             message if no node spans that location.
+    """
+    kg = _get_kg()
+    store = getattr(kg, "_store", None) or getattr(kg, "store", None)
+    if store is None:
+        return "## Error\n\nNo graph store available."
+
+    norm_file = file.lstrip("./")
+
+    # Innermost span: smallest (end_lineno - lineno) that still contains `line`.
+    rows = store.con.execute(
+        """
+        SELECT id
+        FROM nodes
+        WHERE (module_path = :f OR module_path LIKE :like)
+          AND kind IN ('function', 'method', 'class', 'interface', 'type_alias', 'enum')
+          AND lineno IS NOT NULL
+          AND lineno <= :ln
+          AND (end_lineno IS NULL OR end_lineno >= :ln)
+        ORDER BY (COALESCE(end_lineno, lineno) - lineno) ASC
+        LIMIT 1
+        """,
+        {"f": norm_file, "like": f"%{norm_file}", "ln": line},
+    ).fetchall()
+
+    if not rows:
+        # Fall back to the module node itself
+        mod_rows = store.con.execute(
+            "SELECT id FROM nodes WHERE kind = 'module' AND (module_path = ? OR module_path LIKE ?)",
+            (norm_file, f"%{norm_file}"),
+        ).fetchall()
+        if not mod_rows:
+            return (
+                f"## No Definition Found\n\n"
+                f"No function, method, class, interface, type alias, or enum spans "
+                f"`{file}:{line}` in the graph.\n\n"
+                "Check that the file path matches the module path stored in the graph "
+                "(use `graph_stats()` or `list_nodes()` to browse available modules)."
+            )
+        node_id = mod_rows[0][0]
+    else:
+        node_id = rows[0][0]
+
+    return explain(node_id)
+
+
+@mcp.tool()
 def analyze_repo() -> str:
     """
     Run a full structural analysis of the indexed TypeScript/JavaScript repository.
 
-    Returns node/edge counts, JSDoc coverage, node distribution by kind, and
-    edge distribution by relation.
+    Executes the 14-phase TypeScriptKG analysis pipeline — baseline metrics,
+    CodeRank, fan-in/fan-out, module coupling, critical call chains, public API
+    surface, JSDoc coverage, class/interface hierarchy, insights, snapshot
+    history, and SIR centrality — and returns the results as Markdown.
 
     :return: Markdown-formatted analysis report.
     """
-    return _get_kg().analyze()
+    from io import StringIO  # noqa: PLC0415
+
+    from rich.console import Console  # noqa: PLC0415
+
+    from tscode_kg.analysis import TSCodeKGAnalyzer  # noqa: PLC0415
+    from tscode_kg.kg import _render_analysis  # noqa: PLC0415
+
+    # Silence Rich output — stdout carries the MCP protocol on stdio transport.
+    silent = Console(file=StringIO(), highlight=False)
+    kg = _get_kg()
+    try:
+        analyzer = TSCodeKGAnalyzer(kg, console=silent, snapshot_mgr=_snapshot_mgr)
+        analyzer.run_analysis()
+        return analyzer.to_markdown()
+    except Exception as exc:  # noqa: BLE001
+        # Lightweight stats-only fallback — never re-runs the noisy analyzer.
+        try:
+            return _render_analysis(str(kg.repo_root), kg.store.stats())
+        except Exception:  # noqa: BLE001
+            return f"# TypeScriptKG Analysis\n\nAnalysis failed: {exc}\n"
+
+
+@mcp.tool()
+def explain(node_id: str, limit: int = 10) -> str:
+    """
+    Return a natural-language explanation of a code node.
+
+    Given a node ID (e.g., ``fn:src/utils/helpers.ts:formatDate``),
+    returns a markdown-formatted explanation that includes:
+
+    - **What it is**: The node's kind, short description from its JSDoc
+    - **Where it lives**: Module path and source location
+    - **What calls it**: The callers (reverse call graph)
+    - **What it calls**: The callees (functions/methods this node invokes)
+    - **Documentation**: Full JSDoc if available
+
+    This is ideal for understanding the role and context of a specific node
+    without needing to read the full source code. Use ``pack_snippets()``
+    to then retrieve the actual implementation.
+
+    :param node_id: Stable node identifier, e.g.
+                    ``fn:src/utils/helpers.ts:formatDate``.
+    :param limit: Maximum callers and callees to list (default 10). Pass 0
+                  to list all.
+    :return: Markdown-formatted explanation ready for LLM consumption.
+    """
+    from tscode_kg.explain import render_explain  # noqa: PLC0415
+
+    return render_explain(
+        _get_kg(),
+        node_id,
+        limit=limit,
+        snippets_hint="pack_snippets()",
+    )
+
+
+@mcp.tool()
+def rank_nodes(
+    top: int = 25,
+    rels: str = "CALLS,IMPORTS,INHERITS,IMPLEMENTS,EXTENDS",
+    persist_metric: str = "",
+    exclude_tests: bool = True,
+) -> str:
+    """
+    Compute global weighted CodeRank (PageRank) over the repository graph.
+
+    Builds a directed weighted graph from the SQLite store and runs weighted
+    PageRank to identify the most structurally important nodes.  Relation
+    weights follow the CodeRank defaults: CALLS=1.0, IMPORTS=0.9,
+    INHERITS/IMPLEMENTS/EXTENDS=0.75.  Test paths are excluded by default.
+
+    Optionally persists the scores into the ``node_metrics`` table under the
+    given metric name so they can be loaded at query time without recomputing.
+
+    :param top: Number of top-ranked nodes to return (default 25).
+    :param rels: Comma-separated relations to include in the graph
+                 (default ``"CALLS,IMPORTS,INHERITS,IMPLEMENTS,EXTENDS"``).
+    :param persist_metric: If non-empty, persist scores to ``node_metrics``
+                           under this metric name (e.g. ``"coderank_global"``).
+    :param exclude_tests: Exclude test-path nodes from the graph (default True).
+    :return: JSON array of ranked node dicts with ``node_id``, ``score``,
+             ``top_pct`` (e.g. ``"top 0.5%"``), ``kind``, ``qualname``,
+             ``module_path``, and ``rank`` fields.
+    """
+    from tscode_kg.coderank import (  # noqa: PLC0415
+        build_code_graph,
+        compute_coderank,
+        persist_metric_scores,
+    )
+
+    db_path = str(_get_kg().db_path)
+    rel_list = [r.strip() for r in rels.split(",") if r.strip()]
+
+    try:
+        graph = build_code_graph(
+            db_path,
+            include_relations=rel_list,
+            exclude_test_paths=exclude_tests,
+        )
+        scores = compute_coderank(graph)
+    except Exception as exc:  # noqa: BLE001
+        return json.dumps({"error": str(exc)}, indent=2)
+
+    if persist_metric:
+        try:
+            persist_metric_scores(db_path, persist_metric, scores)
+        except Exception:  # noqa: BLE001
+            pass  # non-fatal — still return results
+
+    # Filter out sym: stubs (import placeholders) — only return real code entities
+    all_real_nodes = [
+        (nid, s)
+        for nid, s in sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+        if not nid.startswith("sym:")
+    ]
+    total_real = len(all_real_nodes)
+    results = []
+    for rank_idx, (node_id, score) in enumerate(all_real_nodes[:top], start=1):
+        attrs = graph.nodes.get(node_id, {})
+        top_pct = round(rank_idx / total_real * 100, 1) if total_real > 0 else 0.0
+        results.append(
+            {
+                "rank": rank_idx,
+                "node_id": node_id,
+                "score": round(score, 8),
+                "top_pct": f"top {top_pct:.1f}%",
+                "kind": attrs.get("kind"),
+                "qualname": attrs.get("qualname"),
+                "module_path": attrs.get("module_path"),
+            }
+        )
+
+    return json.dumps(results, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def query_ranked(
+    q: str,
+    k: int = 8,
+    mode: str = "hybrid",
+    top: int = 25,
+    rels: str = "CALLS,IMPORTS,INHERITS,IMPLEMENTS,EXTENDS",
+    radius: int = 2,
+    exclude_tests: bool = True,
+) -> str:
+    """
+    Rank query results using CodeRank-enhanced hybrid or personalized PageRank.
+
+    Combines semantic seed scores from the vector index with structural
+    centrality and graph proximity to produce a final ranked list with
+    explainability components.
+
+    Two modes are available:
+
+    - ``hybrid`` (default): 0.60 × semantic + 0.25 × centrality + 0.15 × proximity
+    - ``ppr``: 0.70 × personalized PageRank + 0.30 × semantic
+
+    :param q: Natural-language query string.
+    :param k: Number of semantic seed nodes to retrieve (default 8).
+    :param mode: Ranking mode — ``"hybrid"`` (default) or ``"ppr"``.
+    :param top: Maximum ranked results to return (default 25).
+    :param rels: Comma-separated relations to include in the local graph.
+    :param radius: Graph expansion radius around seeds (default 2).
+    :param exclude_tests: Exclude test-path nodes (default True).
+    :return: JSON array of ranked result dicts with score components and
+             ``why`` explanation strings.  ``sym:`` import stub nodes are
+             always excluded from the output.
+    """
+    from tscode_kg.coderank import (  # noqa: PLC0415
+        build_code_graph,
+        compute_coderank,
+        rank_query_hybrid,
+        rank_query_ppr,
+    )
+
+    kg = _get_kg()
+    db_path = str(kg.db_path)
+    rel_list = [r.strip() for r in rels.split(",") if r.strip()]
+
+    # Get semantic seeds from the vector index
+    try:
+        raw = kg.query(q, k=k, hop=0, rels=tuple(rel_list))
+        seed_data = json.loads(raw.to_json())
+        seed_nodes = seed_data.get("nodes", [])
+        semantic_scores: dict[str, float] = {
+            n["id"]: float((n.get("relevance") or {}).get("score", 0.0))
+            for n in seed_nodes
+            if (n.get("relevance") or {}).get("score", 0.0) > 0
+        }
+    except Exception as exc:  # noqa: BLE001
+        return json.dumps({"error": f"Seed retrieval failed: {exc}"}, indent=2)
+
+    if not semantic_scores:
+        return json.dumps({"error": "No semantic seeds found for query."}, indent=2)
+
+    try:
+        graph = build_code_graph(
+            db_path,
+            include_relations=rel_list,
+            exclude_test_paths=exclude_tests,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return json.dumps({"error": f"Graph build failed: {exc}"}, indent=2)
+
+    global_cr = compute_coderank(graph)
+    try:
+        if mode == "ppr":
+            results = rank_query_ppr(graph, semantic_scores, radius=radius, top_k=top)
+        else:
+            results = rank_query_hybrid(
+                graph, semantic_scores, global_coderank=global_cr, radius=radius, top_k=top
+            )
+    except Exception as exc:  # noqa: BLE001
+        return json.dumps({"error": f"Ranking failed: {exc}"}, indent=2)
+
+    output = []
+    for rank_idx, r in enumerate(results, start=1):
+        if r.node_id.startswith("sym:"):
+            continue
+        output.append(
+            {
+                "rank": rank_idx,
+                "node_id": r.node_id,
+                "adjusted_score": round(r.adjusted_score, 6),
+                "final_score": round(r.final_score, 6),
+                "semantic_score": round(r.semantic_score, 6),
+                "centrality_score": round(r.centrality_score, 6),
+                "proximity_score": round(r.proximity_score, 6),
+                "kind": r.kind,
+                "qualname": r.qualname,
+                "module_path": r.module_path,
+                "why": list(r.why),
+            }
+        )
+
+    return json.dumps(
+        {"query": q, "mode": mode, "returned": len(output), "results": output},
+        indent=2,
+        ensure_ascii=False,
+    )
+
+
+@mcp.tool()
+def explain_rank(node_id: str, q: str = "") -> str:
+    """
+    Explain the CodeRank score components for a specific node.
+
+    Returns a Markdown report showing the node's structural position in the
+    graph: how many nodes call it, import it, or inherit from / implement /
+    extend it; its global CodeRank score; and, when a query is provided, its
+    semantic relevance and proximity to the query seed set.
+
+    :param node_id: Stable node identifier, e.g.
+                    ``fn:src/utils/helpers.ts:formatDate``.
+    :param q: Optional query string.  When provided, semantic score and
+              proximity to the query seed set are included in the report.
+    :return: Markdown-formatted explanation of the node's rank components.
+    """
+    from tscode_kg.coderank import (  # noqa: PLC0415
+        DEFAULT_GLOBAL_RELS,
+        build_code_graph,
+        compute_coderank,
+        compute_seed_proximity,
+    )
+
+    kg = _get_kg()
+    db_path = str(kg.db_path)
+
+    node = kg.node(node_id)
+    if node is None:
+        return f"## Node Not Found\n\nNode ID `{node_id}` does not exist."
+
+    kind = node.get("kind", "unknown")
+    name = node.get("qualname") or node.get("name", "unknown")
+    out: list[str] = [f"## CodeRank Explanation: `{name}` ({kind})\n"]
+    out.append(f"- **ID:** `{node_id}`")
+    if node.get("module_path"):
+        out.append(f"- **Module:** `{node['module_path']}`")
+    out.append("")
+
+    # Build graph and compute global CodeRank
+    try:
+        graph = build_code_graph(
+            db_path,
+            include_relations=list(DEFAULT_GLOBAL_RELS),
+            exclude_test_paths=True,
+        )
+        scores = compute_coderank(graph)
+    except Exception as exc:  # noqa: BLE001
+        return f"## Error\n\nFailed to build graph: `{exc}`"
+
+    global_score = scores.get(node_id, 0.0)
+    meaningful_scores = sorted(
+        (v for k, v in scores.items() if not k.startswith("sym:")), reverse=True
+    )
+    rank_pos = next(
+        (i + 1 for i, s in enumerate(meaningful_scores) if s <= global_score),
+        len(meaningful_scores),
+    )
+
+    out.append("### Global CodeRank\n")
+    out.append(f"- **Score:** `{global_score:.8f}`")
+    out.append(f"- **Rank:** #{rank_pos} of {len(meaningful_scores)} meaningful nodes")
+    out.append("")
+
+    # Structural context from graph
+    if node_id in graph:
+        in_edges = list(graph.in_edges(node_id, data=True))
+        out.append("### Structural Inbound Edges\n")
+        callers_count = sum(1 for _, _, d in in_edges if "CALLS" in d.get("relations", set()))
+        importers_count = sum(1 for _, _, d in in_edges if "IMPORTS" in d.get("relations", set()))
+        inheritors_count = sum(
+            1
+            for _, _, d in in_edges
+            if d.get("relations", set()) & {"INHERITS", "IMPLEMENTS", "EXTENDS"}
+        )
+        if callers_count:
+            out.append(f"- Called by **{callers_count}** upstream node(s)")
+        if importers_count:
+            out.append(f"- Imported by **{importers_count}** upstream node(s)")
+        if inheritors_count:
+            out.append(
+                f"- Inherited/implemented/extended by **{inheritors_count}** downstream node(s)"
+            )
+        if not (callers_count or importers_count or inheritors_count):
+            out.append("- No inbound structural edges found in the ranked graph")
+        out.append("")
+
+        out_edges = list(graph.out_edges(node_id, data=True))
+        if out_edges:
+            out.append("### Structural Outbound Edges\n")
+            out.append(f"- Calls/imports/inherits **{len(out_edges)}** downstream node(s)")
+            out.append("")
+
+    # Optional query-conditioned scores
+    if q:
+        out.append("### Query-Conditioned Scores\n")
+        try:
+            raw = kg.query(q, k=8, hop=0)
+            seed_data = json.loads(raw.to_json())
+            seed_nodes = seed_data.get("nodes", [])
+            semantic_scores: dict[str, float] = {
+                n["id"]: float((n.get("relevance") or {}).get("score", 0.0)) for n in seed_nodes
+            }
+            this_semantic = semantic_scores.get(node_id, 0.0)
+            out.append(f"- **Query:** `{q}`")
+            out.append(f"- **Semantic score:** `{this_semantic:.4f}`")
+
+            if node_id in graph:
+                seeds = list(semantic_scores.keys())
+                proximity = compute_seed_proximity(graph, seeds)
+                prox = proximity.get(node_id, 0.0)
+                out.append(f"- **Proximity to seeds:** `{prox:.4f}`")
+                if prox >= 1.0:
+                    out.append("  → Direct semantic seed")
+                elif prox >= 0.5:
+                    out.append("  → One hop from a semantic seed")
+                elif prox > 0:
+                    out.append("  → Within local query neighborhood")
+                else:
+                    out.append("  → Outside query neighborhood")
+        except Exception as exc:  # noqa: BLE001
+            out.append(f"- Query scoring failed: `{exc}`")
+        out.append("")
+
+    out.append("---\n")
+    out.append(
+        "*Use `rank_nodes()` for global top-N ranking, or `query_ranked()` for query-conditioned ranking.*"
+    )
+    return "\n".join(out)
 
 
 @mcp.tool()

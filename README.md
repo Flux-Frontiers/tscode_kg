@@ -54,6 +54,12 @@ tscodekg pack "error handling utilities" --hop 2
 # Thorough architectural analysis (fan-in/out, CodeRank, SIR centrality, JSDoc coverage)
 tscodekg analyze /path/to/ts-repo --report analysis.md
 
+# Structural rankings and node explanations
+tscodekg centrality --top 20
+tscodekg bridges --top 20
+tscodekg framework-nodes --top 20
+tscodekg explain "fn:src/utils/helpers.ts:formatDate"
+
 # Temporal metric snapshots
 tscodekg snapshot save --repo /path/to/ts-repo
 tscodekg snapshot list
@@ -67,15 +73,19 @@ tscodekg mcp --repo /path/to/ts-repo
 
 Each subcommand is also available as a dedicated script alias — `tscodekg-init`,
 `tscodekg-build`, `tscodekg-query`, `tscodekg-pack`, `tscodekg-analyze`,
-`tscodekg-install-hooks`, `tscodekg-download-model`, `tscodekg-mcp` — both forms
-are equivalent.
+`tscodekg-centrality`, `tscodekg-install-hooks`, `tscodekg-download-model`,
+`tscodekg-mcp` — both forms are equivalent.
 
 ## MCP tools
 
-The MCP server exposes: `graph_stats`, `query_codebase`, `pack_snippets`, `callers`,
-`get_node`, `list_nodes`, `find_node`, `centrality`, `analyze_repo`,
-`snapshot_list`, `snapshot_show`, and `snapshot_diff` — the same core toolkit as
-PyCodeKG, applied to TypeScript/JavaScript codebases.
+The MCP server exposes the full PyCodeKG toolkit, applied to TypeScript/JavaScript
+codebases: `graph_stats`, `query_codebase`, `pack_snippets`, `callers`, `get_node`,
+`list_nodes`, `find_node`, `centrality`, `bridge_centrality`, `framework_nodes`,
+`find_definition_at`, `analyze_repo`, `explain`, `rank_nodes`, `query_ranked`,
+`explain_rank`, `snapshot_list`, `snapshot_show`, and `snapshot_diff`.
+
+See `docs/MCP.md` for setup and `docs/CHEATSHEET.md` for a query cookbook.
+Repo-local Claude Code skills live in `skills/`.
 
 ## Snapshots & git hook
 
