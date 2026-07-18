@@ -15,6 +15,9 @@ query_codebase(q, k, hop, rels, max_nodes, min_score, max_per_module, rerank_mod
 pack_snippets(q, k, hop, rels, context, max_lines, max_nodes, min_score, rerank_mode)
     Hybrid query + source-grounded snippet extraction.
 
+callers(node_id, rel, paths)
+    Reverse lookup: find all callers of a node, resolving sym: stubs.
+
 get_node(node_id, include_edges)
     Fetch a single node by its stable ID.
 
@@ -26,6 +29,9 @@ list_nodes(module_path, kind)
 
 find_node(name, kind)
     Find nodes by plain name or qualname substring.
+
+centrality(top, kinds, group_by)
+    SIR PageRank — rank nodes or modules by structural importance.
 
 analyze_repo()
     Run structural analysis and return a Markdown report.
@@ -81,16 +87,25 @@ mcp = FastMCP(
         "**pack_snippets(q, k, hop, rels, context, max_lines, max_nodes, min_score, rerank_mode)** — "
         "Same hybrid search, but returns actual source code as a Markdown context pack "
         "with ranked, deduplicated snippets and line numbers.\n\n"
+        "**callers(node_id, rel, paths)** — Precise reverse lookup: every node that calls "
+        "(or inherits from, imports, …) the given node, resolving cross-module sym: stubs. "
+        "Filter with paths='src/' to exclude test callers.\n\n"
         "**get_node(node_id, include_edges)** — Precise lookup of a single node by its stable "
         "ID (e.g. 'cls:src/auth/middleware.ts:AuthMiddleware').\n\n"
         "**list_nodes(module_path, kind)** — List nodes filtered by module path and/or kind.\n\n"
         "**find_node(name, kind)** — Find nodes by name substring when the stable ID is unknown.\n\n"
+        "**centrality(top, kinds, group_by)** — Structural Importance Ranking (SIR): "
+        "deterministic weighted PageRank over the graph. group_by='node' ranks individual "
+        "nodes; group_by='module' aggregates per module. Use to find hotspots before "
+        "refactoring or review.\n\n"
         "**analyze_repo()** — Structural analysis: node counts, edge counts, JSDoc coverage, "
         "node distribution by kind.\n\n"
         "## Recommended Workflows\n\n"
         "- **Explore unfamiliar TS/JS repo**: graph_stats → query_codebase → pack_snippets\n"
         "- **Find a specific class/function**: find_node(name) → get_node(include_edges=True)\n"
         "- **Understand an interface**: get_node → pack_snippets\n"
+        "- **Trace usage of a symbol**: find_node(name) → callers(node_id)\n"
+        "- **Identify structural hotspots**: centrality(top=20) or centrality(group_by='module')\n"
         "- **Architecture review**: analyze_repo\n"
         "- **Answer 'how does X work?'**: pack_snippets with a descriptive query\n"
     ),
@@ -213,6 +228,59 @@ def pack_snippets(
         rerank_lexical_weight=rerank_lexical_weight,
     )
     return pack.to_markdown()
+
+
+@mcp.tool()
+def callers(node_id: str, rel: str = "CALLS", paths: str = "") -> str:
+    """
+    Return all nodes that call a given node, resolving through ``sym:`` stubs.
+
+    Unlike ``query_codebase`` (which seeds on semantics and expands outward),
+    this tool performs a precise reverse lookup: it finds every caller of the
+    specified node, including cross-module callers that reference it via an
+    import alias recorded as a ``sym:`` stub.
+
+    The ``rel`` parameter accepts any edge relation, not just ``CALLS``::
+
+        callers(node_id, rel="INHERITS")    # find all subclasses
+        callers(node_id, rel="IMPLEMENTS")  # find all implementations
+        callers(node_id, rel="IMPORTS")     # find all importers
+
+    Typical workflow::
+
+        # 1. Resolve the exact node ID
+        get_node("fn:src/utils/helpers.ts:formatDate")
+
+        # 2. Find all callers (production code only)
+        callers("fn:src/utils/helpers.ts:formatDate", paths="src/")
+
+    :param node_id: Target node identifier, e.g.
+                    ``cls:src/auth/middleware.ts:AuthMiddleware``.
+    :param rel: Relation type to invert (default ``"CALLS"``).
+    :param paths: Comma-separated module path prefixes to include, e.g.
+                  ``"src/"`` to exclude test callers.
+                  Empty string (default) returns all callers.
+    :return: JSON with ``node_id``, ``rel``, ``caller_count``, and
+             ``callers`` list of node dicts.
+    """
+    caller_list = _get_kg().callers(node_id, rel=rel)
+    if paths:
+        path_prefixes = [p.strip() for p in paths.split(",") if p.strip()]
+        caller_list = [
+            c
+            for c in caller_list
+            if any((c.get("module_path") or "").startswith(pfx) for pfx in path_prefixes)
+        ]
+    return json.dumps(
+        {
+            "node_id": node_id,
+            "rel": rel,
+            "caller_count": len(caller_list),
+            "callers": caller_list,
+        },
+        indent=2,
+        ensure_ascii=False,
+    )
 
 
 @mcp.tool()
@@ -440,6 +508,87 @@ def find_node(name: str, kind: str = "") -> str:
         return json.dumps(result, indent=2, ensure_ascii=False)
     except Exception as e:  # pylint: disable=broad-except
         return json.dumps({"error": str(e)}, indent=2)
+
+
+@mcp.tool()
+def centrality(
+    top: int = 20,
+    kinds: str = "",
+    group_by: str = "node",
+) -> str:
+    """
+    Compute Structural Importance Ranking (SIR) for the indexed codebase.
+
+    Runs a deterministic weighted PageRank over the sym-stub-resolved call
+    graph.  Edge weights are tuned per relation type
+    (CALLS > INHERITS/IMPLEMENTS > IMPORTS > CONTAINS) and amplified for
+    cross-module links; private symbols receive a post-convergence penalty.
+    Scores are normalized to sum to 1.0.
+
+    Use this to:
+
+    - Identify the most structurally critical functions, classes, and interfaces
+    - Understand which modules are most depended upon
+    - Prioritize code review, refactoring, or test coverage efforts
+
+    :param top: Maximum number of ranked entries to return (default 20).
+    :param kinds: Comma-separated node kinds to include: ``module``, ``class``,
+                  ``interface``, ``function``, ``method``.  Empty string returns
+                  all kinds.  Ignored when ``group_by='module'`` (all kinds
+                  contribute to module aggregation).
+    :param group_by: ``node`` (default) returns individual node rankings with
+                     score, inbound edge count, and cross-module inbound count;
+                     ``module`` aggregates node scores per module.
+    :return: Markdown-formatted ranking table.
+    """
+    try:
+        from tscode_kg.centrality import (  # noqa: PLC0415
+            StructuralImportanceRanker,
+            aggregate_module_scores,
+        )
+
+        db_path = _get_kg().db_path
+        ranker = StructuralImportanceRanker(db_path)
+        all_records = ranker.compute()
+    except Exception as e:  # noqa: BLE001
+        return f"## Centrality Error\n\nFailed to compute SIR scores: `{e}`"
+
+    out: list[str] = ["## Structural Importance Ranking (SIR)\n"]
+
+    if group_by == "module":
+        payload = aggregate_module_scores(all_records)[:top]
+        out.append(f"**Group by:** module  |  **Top:** {top}\n")
+        out.append("| Rank | Score | Members | Module |")
+        out.append("|-----:|------:|--------:|--------|")
+        for row in payload:
+            out.append(
+                f"| {row['rank']} | {row['score']:.6f}"
+                f" | {row['member_count']} | `{row['module_path']}` |"
+            )
+    else:
+        kind_set: set[str] | None = None
+        if kinds.strip():
+            kind_set = {k.strip().lower() for k in kinds.split(",") if k.strip()}
+
+        filtered = [r for r in all_records if kind_set is None or r.kind in kind_set][:top]
+        label = kinds if kind_set else "all kinds"
+        out.append(f"**Group by:** node  |  **Top:** {top}  |  **Filter:** {label}\n")
+        out.append("| Rank | Score | Kind | Name | Module | Inbound | XMod |")
+        out.append("|-----:|------:|------|------|--------|--------:|-----:|")
+        for r in filtered:
+            module = f"`{r.module_path}`" if r.module_path else "—"
+            out.append(
+                f"| {r.rank} | {r.score:.6f} | {r.kind} | `{r.name}`"
+                f" | {module} | {r.inbound_count} | {r.cross_module_inbound} |"
+            )
+
+    out.append("")
+    out.append(
+        "> SIR scores are normalized to sum 1.0 across all nodes.  "
+        "Higher score = more structurally central.  "
+        "XMod = cross-module inbound edges."
+    )
+    return "\n".join(out)
 
 
 @mcp.tool()

@@ -29,5 +29,3 @@ dist/
 .next/
 .nuxt/
 
-# Secrets
-.secrets.baseline

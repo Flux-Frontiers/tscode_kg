@@ -47,6 +47,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`tscode_kg/coderank.py`** — global/personalized weighted PageRank and
   hybrid query ranking utilities, ported from PyCodeKG's schema-agnostic
   `ranking/coderank.py`.
+- **`callers(node_id, rel, paths)` MCP tool** — precise reverse lookup of
+  every caller (or subclass/implementer/importer via `rel`) of a node,
+  resolving cross-module `sym:` stubs; mirrors PyCodeKG's tool of the same
+  name.
+- **`centrality(top, kinds, group_by)` MCP tool** — SIR PageRank ranking of
+  nodes or modules, backed by the local `centrality.py`; mirrors PyCodeKG's
+  tool of the same name.
+- **`tscodekg analyze` CLI command** (and `tscodekg-analyze` script alias) —
+  runs the 14-phase `TSCodeKGAnalyzer` and emits a Markdown report
+  (`--report`, `--write-centrality`), matching `pycodekg analyze`.
 
 ### Fixed
 

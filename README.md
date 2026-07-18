@@ -48,9 +48,22 @@ tscodekg build --repo /path/to/ts-repo
 tscodekg query "authentication middleware"
 tscodekg pack "error handling utilities" --hop 2
 
+# Thorough architectural analysis (fan-in/out, CodeRank, SIR centrality, JSDoc coverage)
+tscodekg analyze /path/to/ts-repo --report analysis.md
+
 # MCP server (Claude Desktop, Cursor, etc.)
 tscodekg mcp --repo /path/to/ts-repo
 ```
+
+Each subcommand is also available as a dedicated script alias — `tscodekg-build`,
+`tscodekg-query`, `tscodekg-pack`, `tscodekg-analyze`, `tscodekg-mcp` — both forms
+are equivalent.
+
+## MCP tools
+
+The MCP server exposes: `graph_stats`, `query_codebase`, `pack_snippets`, `callers`,
+`get_node`, `list_nodes`, `find_node`, `centrality`, and `analyze_repo` — the same
+core toolkit as PyCodeKG, applied to TypeScript/JavaScript codebases.
 
 ## Python API
 

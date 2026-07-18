@@ -6,6 +6,7 @@ Usage::
     tscodekg build --repo /path/to/ts-repo
     tscodekg query "authentication middleware"
     tscodekg pack "error handling" --hop 2
+    tscodekg analyze /path/to/ts-repo
     tscodekg mcp --repo /path/to/ts-repo
 """
 
@@ -13,6 +14,7 @@ from __future__ import annotations
 
 import click
 
+from tscode_kg.cli.cmd_analyze import analyze
 from tscode_kg.cli.cmd_build import build
 from tscode_kg.cli.cmd_mcp import mcp_cmd
 from tscode_kg.cli.cmd_query import pack, query
@@ -27,4 +29,5 @@ def cli() -> None:
 cli.add_command(build)
 cli.add_command(query)
 cli.add_command(pack)
+cli.add_command(analyze)
 cli.add_command(mcp_cmd, name="mcp")
