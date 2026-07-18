@@ -36,6 +36,15 @@ centrality(top, kinds, group_by)
 analyze_repo()
     Run structural analysis and return a Markdown report.
 
+snapshot_list(limit, branch)
+    List saved temporal metric snapshots, most recent first.
+
+snapshot_show(key)
+    Show full details of one snapshot ("latest" for the most recent).
+
+snapshot_diff(key_a, key_b)
+    Compare two metric snapshots side-by-side.
+
 Author: Eric G. Suchanek, PhD
 """
 
@@ -51,12 +60,14 @@ from kg_utils.store import DEFAULT_RELS
 from mcp.server.fastmcp import FastMCP
 
 from tscode_kg.kg import TypeScriptKG
+from tscode_kg.snapshots import SnapshotManager
 
 # ---------------------------------------------------------------------------
 # Global state — initialised in main()
 # ---------------------------------------------------------------------------
 
 _kg: TypeScriptKG | None = None
+_snapshot_mgr: SnapshotManager | None = None
 
 
 def _get_kg() -> TypeScriptKG:
@@ -65,6 +76,45 @@ def _get_kg() -> TypeScriptKG:
             "TypeScriptKG not initialised. Run the server via 'tscodekg-mcp --repo /path/to/repo'"
         )
     return _kg
+
+
+def _get_snapshot_mgr() -> SnapshotManager:
+    if _snapshot_mgr is None:
+        raise RuntimeError(
+            "SnapshotManager not initialised. Run the server via 'tscodekg-mcp --repo /path/to/repo'"
+        )
+    return _snapshot_mgr
+
+
+def _snapshot_freshness(snapshot_total_nodes: int) -> dict:
+    """Compare a snapshot's node count against the currently loaded graph DB.
+
+    :param snapshot_total_nodes: ``metrics.total_nodes`` from a snapshot object.
+    :return: Freshness metadata payload.
+    """
+    current = _get_kg().stats()
+    current_nodes = int(current.get("total_nodes", 0))
+    delta = current_nodes - int(snapshot_total_nodes)
+
+    is_fresh = delta == 0
+    status = "fresh" if delta == 0 else ("behind" if delta > 0 else "ahead")
+    note = None
+
+    if 0 < delta < 50:
+        is_fresh = True
+        status = "near_fresh"
+        note = "Within tolerance (sym: stubs often accumulate between rebuilds)"
+
+    out = {
+        "snapshot_total_nodes": int(snapshot_total_nodes),
+        "current_total_nodes": current_nodes,
+        "delta_nodes": delta,
+        "is_fresh": is_fresh,
+        "status": status,
+    }
+    if note:
+        out["note"] = note
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +150,12 @@ mcp = FastMCP(
         "refactoring or review.\n\n"
         "**analyze_repo()** — Structural analysis: node counts, edge counts, JSDoc coverage, "
         "node distribution by kind.\n\n"
+        "**snapshot_list(limit, branch)** — List saved temporal metric snapshots (most recent "
+        "first) with per-snapshot deltas and freshness vs. the live graph.\n\n"
+        "**snapshot_show(key)** — Full details of one snapshot; pass 'latest' (default) for "
+        "the most recent.\n\n"
+        "**snapshot_diff(key_a, key_b)** — Side-by-side comparison of two snapshots with "
+        "computed deltas (b − a).\n\n"
         "## Recommended Workflows\n\n"
         "- **Explore unfamiliar TS/JS repo**: graph_stats → query_codebase → pack_snippets\n"
         "- **Find a specific class/function**: find_node(name) → get_node(include_edges=True)\n"
@@ -107,6 +163,7 @@ mcp = FastMCP(
         "- **Trace usage of a symbol**: find_node(name) → callers(node_id)\n"
         "- **Identify structural hotspots**: centrality(top=20) or centrality(group_by='module')\n"
         "- **Architecture review**: analyze_repo\n"
+        "- **Track codebase evolution**: snapshot_list → snapshot_diff(key_a, key_b)\n"
         "- **Answer 'how does X work?'**: pack_snippets with a descriptive query\n"
     ),
 )
@@ -604,6 +661,109 @@ def analyze_repo() -> str:
     return _get_kg().analyze()
 
 
+@mcp.tool()
+def snapshot_list(limit: int = 10, branch: str = "") -> str:
+    """
+    List saved temporal snapshots of codebase metrics in reverse chronological order.
+
+    Each entry in the returned list contains a ``key`` (tree hash snapshot
+    identifier), ``branch``, ``timestamp``, ``version``, and a summary of
+    key metrics (node count, edge count, JSDoc coverage) plus deltas vs. the
+    previous snapshot.  Use the ``key`` field when calling ``snapshot_show()``
+    or ``snapshot_diff(key_a=..., key_b=...)``.
+
+    Use this tool to answer questions like "how has the codebase grown?" or
+    "when did JSDoc coverage improve?" or "show me only main-branch snapshots".
+
+    :param limit: Maximum number of snapshots to return (default 10; pass 0 for all).
+    :param branch: If provided, filter to snapshots from this branch only
+                   (e.g. ``"main"`` or ``"develop"``).
+    :return: JSON array of snapshot metadata dicts, most recent first.
+    """
+    mgr = _get_snapshot_mgr()
+    snapshots = mgr.list_snapshots(
+        limit=limit if limit > 0 else None,
+        branch=branch if branch else None,
+    )
+    for snap in snapshots:
+        snap_metrics = snap.get("metrics", {})
+        snap["freshness"] = _snapshot_freshness(snap_metrics.get("total_nodes", 0))
+    return json.dumps(snapshots, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def snapshot_show(key: str = "latest") -> str:
+    """
+    Show full details of a specific codebase metrics snapshot.
+
+    Pass a snapshot key (tree hash) to retrieve that exact snapshot, or use
+    the special value ``"latest"`` (default) to retrieve the most recent one.
+
+    Snapshot keys are the ``key`` field returned by ``snapshot_list()``.
+
+    The returned object contains the full metrics dict (total_nodes,
+    total_edges, meaningful_nodes, docstring_coverage, node_counts,
+    edge_counts, critical_issues, complexity_median), the top hotspots, and
+    deltas computed vs. both the previous and the baseline (oldest) snapshots.
+
+    :param key: Snapshot key to load, or ``"latest"`` for the most
+                recent snapshot (default ``"latest"``).  Keys are tree
+                hashes returned by ``snapshot_list()``.
+    :return: JSON object with full snapshot details, or an error dict if
+             the requested snapshot does not exist.
+    """
+    mgr = _get_snapshot_mgr()
+
+    if key == "latest":
+        entries = mgr.list_snapshots(limit=1)
+        if not entries:
+            return json.dumps({"error": "No snapshots found."})
+        key = entries[0]["key"]
+
+    snapshot = mgr.load_snapshot(key)
+    if snapshot is None:
+        return json.dumps({"error": f"Snapshot not found for key: {key!r}"})
+    out = snapshot.to_dict()
+    out["freshness"] = _snapshot_freshness(snapshot.metrics.get("total_nodes", 0))
+    return json.dumps(out, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def snapshot_diff(key_a: str, key_b: str) -> str:
+    """
+    Compare two codebase metric snapshots side-by-side.
+
+    Returns the full metrics dict for both snapshots and a computed delta
+    (b − a) covering node and edge counts, plus per-kind node count and
+    per-relation edge count deltas.
+
+    Typical workflow::
+
+        # 1. List available snapshots — note the 'key' field in each entry
+        snapshot_list()
+
+        # 2. Diff any two using the key= field values
+        snapshot_diff(key_a="abc1234ef...", key_b="def5678ab...")
+
+    :param key_a: First (older) snapshot key — the ``key`` field from
+                  ``snapshot_list()`` output (a tree-hash string).
+    :param key_b: Second (newer) snapshot key — the ``key`` field from
+                  ``snapshot_list()`` output (a tree-hash string).
+    :return: JSON object with keys ``a`` (metrics + issues list for key_a),
+             ``b`` (metrics + issues list for key_b), ``delta`` (b − a),
+             ``node_counts_delta``, and ``edge_counts_delta``. Returns an
+             error dict if either snapshot is missing.
+    """
+    mgr = _get_snapshot_mgr()
+    result = mgr.diff_snapshots(key_a, key_b)
+    if "error" not in result:
+        result["freshness"] = {
+            "a": _snapshot_freshness(result.get("a", {}).get("metrics", {}).get("total_nodes", 0)),
+            "b": _snapshot_freshness(result.get("b", {}).get("metrics", {}).get("total_nodes", 0)),
+        }
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
@@ -641,7 +801,7 @@ def _parse_args(argv: list | None = None) -> argparse.Namespace:
 
 def main(argv: list | None = None) -> None:
     """CLI entry point for the TypeScriptKG MCP server."""
-    global _kg
+    global _kg, _snapshot_mgr
 
     args = _parse_args(argv)
 
@@ -666,6 +826,7 @@ def main(argv: list | None = None) -> None:
     )
 
     _kg = TypeScriptKG(repo_root=repo, db_path=db, vectors_path=vectors, model=args.model)
+    _snapshot_mgr = SnapshotManager(repo / ".tscodekg" / "snapshots", db_path=db)
     mcp.run(transport=args.transport)
 
 

@@ -94,12 +94,15 @@ Homepage = "https://github.com/Flux-Frontiers/tscode_kg"
 Repository = "https://github.com/Flux-Frontiers/tscode_kg"
 
 [project.scripts]
-tscodekg         = "tscode_kg.cli.main:cli"
-tscodekg-analyze = "tscode_kg.cli.cmd_analyze:analyze"
-tscodekg-build   = "tscode_kg.cli.cmd_build:build"
-tscodekg-query   = "tscode_kg.cli.cmd_query:query"
-tscodekg-pack    = "tscode_kg.cli.cmd_query:pack"
-tscodekg-mcp     = "tscode_kg.mcp_server:main"
+tscodekg                = "tscode_kg.cli.main:cli"
+tscodekg-analyze        = "tscode_kg.cli.cmd_analyze:analyze"
+tscodekg-build          = "tscode_kg.cli.cmd_build:build"
+tscodekg-download-model = "tscode_kg.cli.cmd_model:download_model"
+tscodekg-init           = "tscode_kg.cli.cmd_init:init"
+tscodekg-install-hooks  = "tscode_kg.cli.cmd_hooks:install_hooks"
+tscodekg-query          = "tscode_kg.cli.cmd_query:query"
+tscodekg-pack           = "tscode_kg.cli.cmd_query:pack"
+tscodekg-mcp            = "tscode_kg.mcp_server:main"
 
 [tool.ruff]
 line-length    = 100

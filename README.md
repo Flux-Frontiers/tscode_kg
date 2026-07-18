@@ -41,6 +41,9 @@ TypeScriptKG builds a queryable knowledge graph from TypeScript/JavaScript sourc
 ```bash
 pip install tscode-kg
 
+# First-time setup (downloads model, builds graph, installs hooks, snapshots)
+tscodekg init --repo /path/to/ts-repo
+
 # Build the KG for a TypeScript repo
 tscodekg build --repo /path/to/ts-repo
 
@@ -51,19 +54,38 @@ tscodekg pack "error handling utilities" --hop 2
 # Thorough architectural analysis (fan-in/out, CodeRank, SIR centrality, JSDoc coverage)
 tscodekg analyze /path/to/ts-repo --report analysis.md
 
+# Temporal metric snapshots
+tscodekg snapshot save --repo /path/to/ts-repo
+tscodekg snapshot list
+
+# Install the pre-commit snapshot hook
+tscodekg install-hooks --repo /path/to/ts-repo
+
 # MCP server (Claude Desktop, Cursor, etc.)
 tscodekg mcp --repo /path/to/ts-repo
 ```
 
-Each subcommand is also available as a dedicated script alias — `tscodekg-build`,
-`tscodekg-query`, `tscodekg-pack`, `tscodekg-analyze`, `tscodekg-mcp` — both forms
+Each subcommand is also available as a dedicated script alias — `tscodekg-init`,
+`tscodekg-build`, `tscodekg-query`, `tscodekg-pack`, `tscodekg-analyze`,
+`tscodekg-install-hooks`, `tscodekg-download-model`, `tscodekg-mcp` — both forms
 are equivalent.
 
 ## MCP tools
 
 The MCP server exposes: `graph_stats`, `query_codebase`, `pack_snippets`, `callers`,
-`get_node`, `list_nodes`, `find_node`, `centrality`, and `analyze_repo` — the same
-core toolkit as PyCodeKG, applied to TypeScript/JavaScript codebases.
+`get_node`, `list_nodes`, `find_node`, `centrality`, `analyze_repo`,
+`snapshot_list`, `snapshot_show`, and `snapshot_diff` — the same core toolkit as
+PyCodeKG, applied to TypeScript/JavaScript codebases.
+
+## Snapshots & git hook
+
+`tscodekg snapshot save` captures graph metrics (nodes, edges, JSDoc coverage,
+issues, hotspots) keyed by git tree hash into `.tscodekg/snapshots/`, with
+deltas computed against the previous and baseline snapshots.
+`tscodekg install-hooks` installs a pre-commit hook that rebuilds the index,
+captures a snapshot, stages the snapshot directory, and then runs the
+pre-commit framework checks — so every commit records the state of the
+knowledge graph. Skip it for one commit with `TSCODEKG_SKIP_SNAPSHOT=1`.
 
 ## Python API
 

@@ -57,9 +57,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`tscodekg analyze` CLI command** (and `tscodekg-analyze` script alias) —
   runs the 14-phase `TSCodeKGAnalyzer` and emits a Markdown report
   (`--report`, `--write-centrality`), matching `pycodekg analyze`.
+- **Temporal snapshots** (`tscode_kg/snapshots.py`) — `SnapshotManager` bound
+  to the `tscode-kg` package over the shared `kg_utils.snapshots` base;
+  snapshots stored in `.tscodekg/snapshots/{tree_hash}.json` with a manifest,
+  mirroring PyCodeKG's `.pycodekg/snapshots/` layout.
+- **`tscodekg snapshot` CLI group** — `save` / `list` / `show` / `diff` /
+  `prune`, matching `pycodekg snapshot`. `save` runs the analyzer for issue
+  counts and hotspots and degrades to a stats-only snapshot when the semantic
+  extras are unavailable (so the pre-commit hook works on graph-only builds).
+- **`tscodekg install-hooks`** (and `tscodekg-install-hooks`) — installs a
+  pre-commit git hook that rebuilds the index, captures a tree-hash-keyed
+  snapshot, stages `.tscodekg/snapshots/`, and then runs the pre-commit
+  framework checks. Skip per-commit with `TSCODEKG_SKIP_SNAPSHOT=1`.
+- **`tscodekg init`** (and `tscodekg-init`) — one-command setup: scaffolds
+  `[tool.tscodekg]`, downloads the embedding model, builds the graph,
+  installs the hook, and captures an initial snapshot.
+- **`tscodekg download-model`** (and `tscodekg-download-model`) — caches the
+  embedding model locally for offline builds.
+- **`snapshot_list` / `snapshot_show` / `snapshot_diff` MCP tools** with
+  freshness metadata vs. the live graph, mirroring PyCodeKG.
+- **GitHub Actions CI** (`.github/workflows/ci.yml`: ruff lint + format,
+  `ty` type check, pytest excluding integration marks) and **release
+  workflow** (`.github/workflows/release.yml`: build wheel/sdist and create
+  a GitHub Release from `release-notes.md` on `v*` tags), adapted from
+  PyCodeKG.
+- **`poetry.toml`** (`virtualenvs.in-project = true`) matching PyCodeKG and
+  KG_utils.
+- **`tests/test_snapshots.py`** — snapshot capture/save/list/diff round-trip
+  tests.
 
 ### Fixed
 
+- **`.gitignore` ignored `.tscodekg/snapshots/` and `**/.tscodekg/`
+  wholesale**, which would have made the pre-commit hook's
+  `git add .tscodekg/snapshots/` a silent no-op. Now only generated
+  artifacts (graph/vectors SQLite, models, lancedb leftovers) are ignored
+  and snapshots are committable, matching PyCodeKG.
 - **Extractor/kg.py imported from `kg_utils.types`**, which doesn't exist in
   the currently published `kgmodule-utils` 0.6.2 (real layout is
   `kg_utils.specs` and `kg_utils.extractor`) — this crashed `import tscode_kg`

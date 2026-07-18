@@ -1,14 +1,12 @@
 # TypeScriptKG generated artifacts
+# MUST include .tscodekg/snapshots!
 .tscodekg/lancedb/
 .tscodekg/lancedb-*
+.tscodekg/vectors.sqlite
+.tscodekg/vectors.sqlite*
 .tscodekg/graph.sqlite
-.tscodekg/graph.sqlite-shm
-.tscodekg/graph.sqlite-wal
+.tscodekg/graph.sqlite*
 .tscodekg/models/
-.tscodekg/snapshots/
-
-# Nested KG artifacts
-**/.tscodekg/
 
 # Python
 __pycache__/
