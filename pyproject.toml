@@ -130,3 +130,7 @@ markers = [
 
 [tool.tscodekg]
 include = ["src"]
+
+# This repo is Python — PyCodeKG (not TypeScriptKG) indexes it on commit.
+[tool.pycodekg]
+include = ["src"]

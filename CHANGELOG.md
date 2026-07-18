@@ -109,6 +109,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Clarified repo self-indexing: this repository is Python, so PyCodeKG —
+  not TypeScriptKG — indexes it on commit.** CLAUDE.md now directs agents to
+  the PyCodeKG MCP tools for exploring this codebase (`pycodekg init --repo .`
+  installs the hook), `[tool.pycodekg] include = ["src"]` was added to
+  pyproject.toml, `.gitignore` ignores `.pycodekg/` artifacts while keeping
+  `.pycodekg/snapshots/` committable, and the pre-commit large-file and
+  detect-secrets excludes cover both `.tscodekg/` and `.pycodekg/`.
+  `tscodekg install-hooks` remains the product feature for TS/JS repos.
 - **MCP `analyze_repo` wrote Rich phase output to stdout**, which carries the
   MCP protocol on the stdio transport; the analyzer now runs against a silent
   console (matching PyCodeKG) and falls back to a stats-only report instead

@@ -5,7 +5,13 @@ This file provides guidance to Claude Code when working in this repository.
 ## Agent Identity
 
 
-Always use the TypeScriptKG MCP tools before reading files. You have direct, source-grounded access to this codebase — use it.
+This repository is **Python** code (TypeScriptKG is a Python tool that indexes TS/JS repos). To explore *this* codebase, always use the **PyCodeKG** MCP tools before reading files — TypeScriptKG cannot index itself. The TypeScriptKG toolkit below is the product surface, used on TypeScript/JavaScript repositories.
+
+```bash
+# Index this repo with PyCodeKG (one-time setup; installs the pycodekg
+# pre-commit hook that rebuilds the index and snapshots on every commit)
+pycodekg init --repo .
+```
 
 ---
 
@@ -71,9 +77,12 @@ Each command is available as a `tscodekg <subcommand>` **or** (where noted) a de
 
 ### Quick Examples
 
+All `tscodekg` commands operate on TypeScript/JavaScript repositories — point
+them at a TS/JS repo, not at this one:
+
 ```bash
-# First-time setup (downloads model, builds graph, installs hooks, snapshots)
-tscodekg init --repo .
+# First-time setup in a TS/JS repo (downloads model, builds graph, installs hooks, snapshots)
+tscodekg init --repo /path/to/ts-repo
 
 # Build the knowledge graph
 tscodekg build --repo /path/to/ts-repo
@@ -85,13 +94,13 @@ tscodekg query "authentication middleware"
 tscodekg pack "error handling utilities"
 
 # Run thorough architectural analysis
-tscodekg analyze .
+tscodekg analyze /path/to/ts-repo
 
 # Start MCP server (for IDE integrations)
-tscodekg mcp --repo .
+tscodekg mcp --repo /path/to/ts-repo
 ```
 
-**Directory Includes:** Configure via `[tool.tscodekg].include` in `pyproject.toml`. When unset, all directories are indexed. See README for details.
+**Directory Includes:** Configure via `[tool.tscodekg].include` in the target repo's `pyproject.toml` (or `--help` for flags). When unset, all directories are indexed. See README for details.
 
 For detailed options: `tscodekg <command> --help`
 

@@ -8,6 +8,15 @@
 .tscodekg/graph.sqlite*
 .tscodekg/models/
 
+# PyCodeKG artifacts — this repo is Python, so pycodekg indexes it on commit
+# MUST include .pycodekg/snapshots!
+.pycodekg/vectors.sqlite
+.pycodekg/vectors.sqlite*
+.pycodekg/graph.sqlite
+.pycodekg/graph.sqlite*
+.pycodekg/models/
+.kgcache/
+
 # Python
 __pycache__/
 *.py[cod]
