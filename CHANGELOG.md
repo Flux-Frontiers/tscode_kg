@@ -125,11 +125,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   temporal metrics visualization over `.tscodekg/snapshots/`, adapted to the
   dict-based kg_utils snapshot metrics; `tests/test_viz3d_timeline.py`
   ported (20 tests).
-- **`pycode-kg>=0.20.0` added to the dev dependency group and `dev` extra** —
+- **`pycode-kg>=0.20.0,<0.21` added to the `dev` and `kgdeps` extras** —
   this repo is Python, so a dev checkout needs `pycodekg` for the check-in
   indexing/snapshot workflow. Note this pulls the semantic stack
-  (sentence-transformers) into `poetry install`; move it to an optional
-  group if CI install weight becomes a problem.
+  (sentence-transformers) into `poetry install --extras dev`; move it out
+  if CI install weight becomes a problem.
+- **Removed the `[tool.poetry.group.dev.dependencies]` group** — it
+  duplicated the PEP-621 `dev` extra entry-for-entry (PyCodeKG has no such
+  group either), and every duplicated declaration multiplies Poetry's
+  marker-override re-solve rounds during `poetry lock`. Install dev tools
+  with `poetry install --extras dev` / `pip install -e ".[dev]"` as before.
+- **`viz3d` extra uses plain `pyvista`, not `pyvista[jupyter]`** — the
+  jupyter extra's trame/jupyter subtree sends Poetry's resolver into
+  runaway marker-split re-solving (the lock never converged). The Qt
+  interactor doesn't need it; install `pyvista[jupyter]` manually for
+  in-notebook rendering or HTML export. Viz extras carry version brackets
+  matching PyCodeKG's proven lockfile versions.
 
 ### Fixed
 
