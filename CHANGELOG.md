@@ -47,9 +47,120 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`tscode_kg/coderank.py`** — global/personalized weighted PageRank and
   hybrid query ranking utilities, ported from PyCodeKG's schema-agnostic
   `ranking/coderank.py`.
+- **`callers(node_id, rel, paths)` MCP tool** — precise reverse lookup of
+  every caller (or subclass/implementer/importer via `rel`) of a node,
+  resolving cross-module `sym:` stubs; mirrors PyCodeKG's tool of the same
+  name.
+- **`centrality(top, kinds, group_by)` MCP tool** — SIR PageRank ranking of
+  nodes or modules, backed by the local `centrality.py`; mirrors PyCodeKG's
+  tool of the same name.
+- **`tscodekg analyze` CLI command** (and `tscodekg-analyze` script alias) —
+  runs the 14-phase `TSCodeKGAnalyzer` and emits a Markdown report
+  (`--report`, `--write-centrality`), matching `pycodekg analyze`.
+- **Temporal snapshots** (`tscode_kg/snapshots.py`) — `SnapshotManager` bound
+  to the `tscode-kg` package over the shared `kg_utils.snapshots` base;
+  snapshots stored in `.tscodekg/snapshots/{tree_hash}.json` with a manifest,
+  mirroring PyCodeKG's `.pycodekg/snapshots/` layout.
+- **`tscodekg snapshot` CLI group** — `save` / `list` / `show` / `diff` /
+  `prune`, matching `pycodekg snapshot`. `save` runs the analyzer for issue
+  counts and hotspots and degrades to a stats-only snapshot when the semantic
+  extras are unavailable (so the pre-commit hook works on graph-only builds).
+- **`tscodekg install-hooks`** (and `tscodekg-install-hooks`) — installs a
+  pre-commit git hook that rebuilds the index, captures a tree-hash-keyed
+  snapshot, stages `.tscodekg/snapshots/`, and then runs the pre-commit
+  framework checks. Skip per-commit with `TSCODEKG_SKIP_SNAPSHOT=1`.
+- **`tscodekg init`** (and `tscodekg-init`) — one-command setup: scaffolds
+  `[tool.tscodekg]`, downloads the embedding model, builds the graph,
+  installs the hook, and captures an initial snapshot.
+- **`tscodekg download-model`** (and `tscodekg-download-model`) — caches the
+  embedding model locally for offline builds.
+- **`snapshot_list` / `snapshot_show` / `snapshot_diff` MCP tools** with
+  freshness metadata vs. the live graph, mirroring PyCodeKG.
+- **GitHub Actions CI** (`.github/workflows/ci.yml`: ruff lint + format,
+  `ty` type check, pytest excluding integration marks) and **release
+  workflow** (`.github/workflows/release.yml`: build wheel/sdist and create
+  a GitHub Release from `release-notes.md` on `v*` tags), adapted from
+  PyCodeKG.
+- **`poetry.toml`** (`virtualenvs.in-project = true`) matching PyCodeKG and
+  KG_utils.
+- **`tests/test_snapshots.py`** — snapshot capture/save/list/diff round-trip
+  tests.
+- **`tscode_kg/explain.py`** — shared `render_explain` presenter (metadata,
+  JSDoc, callers, callees, kind-aware role labels) backing both the CLI and
+  MCP `explain` surfaces; role heuristics adapted to TS/JS (interfaces,
+  type-level declarations, JS runtime protocol members).
+- **`tscode_kg/bridge.py`** — module connectivity (bridge centrality), and
+  **`tscode_kg/framework_detector.py`** — framework-like hub detection
+  (0.6 × SIR + 0.4 × connectivity), both ported from PyCodeKG.
+- **Seven MCP tools completing PyCodeKG tool parity (19 total)**:
+  `bridge_centrality`, `framework_nodes`, `find_definition_at`, `explain`,
+  `rank_nodes`, `query_ranked`, `explain_rank` — signatures mirror PyCodeKG
+  (rank tools default to the TS relation set incl. IMPLEMENTS/EXTENDS).
+- **Four CLI commands**: `explain`, `centrality` (+ `tscodekg-centrality`
+  alias), `bridges`, `framework-nodes`.
+- **Repo/doc parity**: `CLAUDE.md`, `CITATION.cff`, and a `docs/` set
+  (INSTALLATION, MCP, CHEATSHEET, SNAPSHOTS, CODERANK, Analyze,
+  pull_request_template) adapted from PyCodeKG.
+- **`skills/` directory** with repo-local Claude Code skills: `tscodekg`
+  (+ installation/cheatsheet references), `tscodekg-thorough-analysis`,
+  `setup-tscodekg-mcp`, `sync-mcp-docs`, `changelog-commit`, `release`.
+- **Tests**: `test_centrality.py`, `test_coderank.py`, `test_explain.py`,
+  `test_bridge.py`, `test_exclusions.py` adapted from PyCodeKG's suite.
+- **Streamlit visualizer** (`tscode_kg/app.py`, `tscodekg viz` +
+  `tscodekg-viz`) — port of PyCodeKG's interactive graph explorer over the
+  shared `kg_utils` GraphStore, with the TS kind palette (interface,
+  type_alias, enum, namespace shapes/colors), IMPLEMENTS/EXTENDS edge colors,
+  JSDoc labels, TypeScript snippet highlighting, and `TSCODEKG_DB` /
+  `TSCODEKG_VECTORS` env vars. Requires the new `viz` extra
+  (streamlit, pyvis, plotly).
+- **3-D visualizer** (`tscode_kg/viz3d.py` + `layout3d.py`, `tscodekg viz3d`
+  + `tscodekg-viz3d`) — port of the PyVista/PyQt5 Allium & Funnel renderer:
+  TS kinds colored/sized/stratified (interfaces share the class layer and
+  octahedron LOD geometry), IMPLEMENTS/EXTENDS edge checkboxes and colors,
+  interface counts in the stats panel and title bar, and a JSDoc popup that
+  parses both `:param:` and `@param` doc styles. Requires the new `viz3d`
+  extra (pyvista, PyQt5, pyvistaqt, param, markdown, trame-vtk).
+- **Snapshot timeline** (`tscode_kg/viz3d_timeline.py`,
+  `tscodekg viz-timeline` + `tscodekg-viz-timeline`) — Plotly 2-D/3-D
+  temporal metrics visualization over `.tscodekg/snapshots/`, adapted to the
+  dict-based kg_utils snapshot metrics; `tests/test_viz3d_timeline.py`
+  ported (20 tests).
+- **`pycode-kg>=0.20.0,<0.21` added to the `dev` and `kgdeps` extras** —
+  this repo is Python, so a dev checkout needs `pycodekg` for the check-in
+  indexing/snapshot workflow. Note this pulls the semantic stack
+  (sentence-transformers) into `poetry install --extras dev`; move it out
+  if CI install weight becomes a problem.
+- **Removed the `[tool.poetry.group.dev.dependencies]` group** — it
+  duplicated the PEP-621 `dev` extra entry-for-entry (PyCodeKG has no such
+  group either), and every duplicated declaration multiplies Poetry's
+  marker-override re-solve rounds during `poetry lock`. Install dev tools
+  with `poetry install --extras dev` / `pip install -e ".[dev]"` as before.
+- **`viz3d` extra uses plain `pyvista`, not `pyvista[jupyter]`** — the
+  jupyter extra's trame/jupyter subtree sends Poetry's resolver into
+  runaway marker-split re-solving (the lock never converged). The Qt
+  interactor doesn't need it; install `pyvista[jupyter]` manually for
+  in-notebook rendering or HTML export. Viz extras carry version brackets
+  matching PyCodeKG's proven lockfile versions.
 
 ### Fixed
 
+- **Clarified repo self-indexing: this repository is Python, so PyCodeKG —
+  not TypeScriptKG — indexes it on commit.** CLAUDE.md now directs agents to
+  the PyCodeKG MCP tools for exploring this codebase (`pycodekg init --repo .`
+  installs the hook), `[tool.pycodekg] include = ["src"]` was added to
+  pyproject.toml, `.gitignore` ignores `.pycodekg/` artifacts while keeping
+  `.pycodekg/snapshots/` committable, and the pre-commit large-file and
+  detect-secrets excludes cover both `.tscodekg/` and `.pycodekg/`.
+  `tscodekg install-hooks` remains the product feature for TS/JS repos.
+- **MCP `analyze_repo` wrote Rich phase output to stdout**, which carries the
+  MCP protocol on the stdio transport; the analyzer now runs against a silent
+  console (matching PyCodeKG) and falls back to a stats-only report instead
+  of re-running the noisy analyzer.
+- **`.gitignore` ignored `.tscodekg/snapshots/` and `**/.tscodekg/`
+  wholesale**, which would have made the pre-commit hook's
+  `git add .tscodekg/snapshots/` a silent no-op. Now only generated
+  artifacts (graph/vectors SQLite, models, lancedb leftovers) are ignored
+  and snapshots are committable, matching PyCodeKG.
 - **Extractor/kg.py imported from `kg_utils.types`**, which doesn't exist in
   the currently published `kgmodule-utils` 0.6.2 (real layout is
   `kg_utils.specs` and `kg_utils.extractor`) — this crashed `import tscode_kg`

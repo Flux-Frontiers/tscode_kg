@@ -233,7 +233,7 @@ class TSCodeKGAnalyzer:
 
             if persist_centrality and self.centrality_records:
                 try:
-                    from pycode_kg.analysis.centrality import (
+                    from tscode_kg.centrality import (
                         StructuralImportanceRanker,  # noqa: PLC0415
                     )
 
@@ -271,7 +271,7 @@ class TSCodeKGAnalyzer:
     def _compute_coderank(self) -> None:
         """Phase 2: Compute global CodeRank (weighted PageRank) over the graph."""
         try:
-            from pycode_kg.ranking.coderank import (  # noqa: PLC0415
+            from tscode_kg.coderank import (  # noqa: PLC0415
                 build_code_graph,
                 compute_coderank,
             )
@@ -1084,7 +1084,7 @@ class TSCodeKGAnalyzer:
     def _analyze_centrality(self) -> None:
         """Phase 14: Compute Structural Importance Ranking (SIR) via PageRank."""
         try:
-            from pycode_kg.analysis.centrality import (  # noqa: PLC0415
+            from tscode_kg.centrality import (  # noqa: PLC0415
                 StructuralImportanceRanker,
                 aggregate_module_scores,
             )

@@ -39,4 +39,4 @@ try:
         "SnippetPack",
     ]
 except ImportError:
-    pass  # pycode-kg not installed; extractor still works standalone
+    pass  # kgmodule-utils[semantic] not installed; extractor still works standalone

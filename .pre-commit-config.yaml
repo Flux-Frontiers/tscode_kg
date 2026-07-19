@@ -9,7 +9,7 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=1000]
-        exclude: '^\.tscodekg/'
+        exclude: '^\.(tscodekg|pycodekg)/'
       - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -29,7 +29,7 @@ repos:
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline', '--exclude-files', '\.tscodekg/snapshots/.*']
+        args: ['--baseline', '.secrets.baseline', '--exclude-files', '\.(tscodekg|pycodekg)/snapshots/.*']
 
   - repo: local
     hooks:
