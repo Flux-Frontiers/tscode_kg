@@ -28,6 +28,8 @@ packages = [{ include = "tscode_kg", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
 detect-secrets = ">=1.5.0"
+# This repo is Python — pycodekg indexes it and runs in the pre-commit hook.
+pycode-kg = ">=0.20.0,<0.21"
 ty = ">=0.0.41"
 pre-commit = ">=4.5.1"
 pylint = ">=4.0.5"
@@ -76,11 +78,30 @@ kg = [
 ]
 # Cross-KG: PyCodeKG (Python codebases) and DocKG (docs) available from within tscode_kg
 kgdeps = [
-    "pycode-kg>=0.20.0",
+    "pycode-kg>=0.20.0,<0.21",
     "doc-kg>=0.18.1",
+]
+# Streamlit graph explorer + plotly timeline.
+# Upper bounds prune the resolver's search space — the joint viz3d +
+# pycode-kg(dev) tree otherwise sends Poetry into runaway backtracking.
+# Floors/caps bracket the versions pycode_kg's lockfile has proven out.
+viz = [
+    "plotly>=6.8.0,<6.9",
+    "pyvis>=0.3.2,<0.4",
+    "streamlit>=1.59.0,<1.60",
+]
+# PyVista/PyQt5 3-D visualizer
+viz3d = [
+    "markdown>=3.10,<3.11",
+    "param>=2.4,<2.5",
+    "PyQt5>=5.15.11,<5.16",
+    "pyvista[jupyter]>=0.48.4,<0.49",
+    "pyvistaqt>=0.12,<0.13",
+    "trame-vtk>=2.11.8,<2.12",
 ]
 dev = [
     "detect-secrets>=1.5.0",
+    "pycode-kg>=0.20.0,<0.21",
     "ty>=0.0.41",
     "pre-commit>=4.5.1",
     "pylint>=4.0.5",
@@ -103,6 +124,9 @@ tscodekg-init           = "tscode_kg.cli.cmd_init:init"
 tscodekg-install-hooks  = "tscode_kg.cli.cmd_hooks:install_hooks"
 tscodekg-query          = "tscode_kg.cli.cmd_query:query"
 tscodekg-pack           = "tscode_kg.cli.cmd_query:pack"
+tscodekg-viz            = "tscode_kg.cli.cmd_viz:viz"
+tscodekg-viz3d          = "tscode_kg.cli.cmd_viz:viz3d"
+tscodekg-viz-timeline   = "tscode_kg.cli.cmd_viz:viz_timeline"
 tscodekg-mcp            = "tscode_kg.mcp_server:main"
 
 [tool.ruff]
@@ -118,7 +142,14 @@ python-version = "3.12"
 root = ["src"]
 
 [tool.ty.rules]
+# Be lenient about third-party stubs (mirrors mypy's ignore_missing_imports).
 unresolved-import = "ignore"
+# viz3d.py carries `# ty: ignore` suppressions for param/PyQt5/pyvista false
+# positives. Those libraries live in the optional viz/viz3d extras, so in the
+# lean CI install the imports are Unknown, the errors don't fire, and the
+# ignores look "unused". Don't fail the build on that — the suppressions are
+# still honored locally where the extras (and the errors) are present.
+unused-ignore-comment = "ignore"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

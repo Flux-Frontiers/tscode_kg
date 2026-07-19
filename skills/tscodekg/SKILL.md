@@ -90,6 +90,9 @@ Each command is available as `tscodekg <subcommand>` **or** a dedicated `tscodek
 | `bridges` | Module connectivity ranking — orchestrator/hub modules |
 | `framework-nodes` | Framework-like hubs: high SIR + high connectivity |
 | `explain` | Natural-language explanation of a node by ID |
+| `viz` / `tscodekg-viz` | Streamlit interactive graph explorer (`--port`, `--no-browser`; needs `[viz]` extra) |
+| `viz3d` / `tscodekg-viz3d` | 3-D PyVista visualizer (`--layout` allium/funnel; needs `[viz3d]` extra) |
+| `viz-timeline` / `tscodekg-viz-timeline` | Plotly timeline of snapshot metrics (`--type` 2d/3d; needs `[viz]` extra) |
 | `snapshot save [VERSION]` | Capture a metrics snapshot (branch/tree-hash auto-detected) |
 | `snapshot list` | List snapshots newest-first (`--json`) |
 | `snapshot show <key>` | Full details for one snapshot |

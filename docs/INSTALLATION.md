@@ -59,6 +59,8 @@ tscode-kg = {version = ">=0.1.0", extras = ["kg"]}
 |---|---|
 | `kg` | `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, `networkx` — semantic index, hybrid query, MCP server, analysis |
 | `kgdeps` | `pycode-kg`, `doc-kg` — sibling knowledge graphs for Python codebases and document corpora |
+| `viz` | `streamlit`, `pyvis`, `plotly` — interactive graph explorer and snapshot timeline |
+| `viz3d` | `pyvista[jupyter]`, `PyQt5`, `pyvistaqt`, `param`, `markdown`, `trame-vtk` — 3-D visualizer |
 | `dev` | `ruff`, `ty`, `pylint`, `pytest`, `pytest-cov`, `pre-commit`, `detect-secrets` |
 
 ---
@@ -94,6 +96,9 @@ All commands are available as `tscodekg <subcommand>`. The most common subcomman
 | `tscodekg-pack` | `tscodekg pack` |
 | `tscodekg-analyze` | `tscodekg analyze` |
 | `tscodekg-centrality` | `tscodekg centrality` |
+| `tscodekg-viz` | `tscodekg viz` |
+| `tscodekg-viz3d` | `tscodekg viz3d` |
+| `tscodekg-viz-timeline` | `tscodekg viz-timeline` |
 | `tscodekg-download-model` | `tscodekg download-model` |
 | `tscodekg-install-hooks` | `tscodekg install-hooks` |
 | `tscodekg-mcp` | `tscodekg mcp` |

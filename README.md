@@ -64,6 +64,11 @@ tscodekg explain "fn:src/utils/helpers.ts:formatDate"
 tscodekg snapshot save --repo /path/to/ts-repo
 tscodekg snapshot list
 
+# Interactive visualizers (install extras: tscode-kg[viz] / tscode-kg[viz3d])
+tscodekg viz --port 8500
+tscodekg viz3d --layout allium
+tscodekg viz-timeline --type 2d
+
 # Install the pre-commit snapshot hook
 tscodekg install-hooks --repo /path/to/ts-repo
 
@@ -73,8 +78,9 @@ tscodekg mcp --repo /path/to/ts-repo
 
 Each subcommand is also available as a dedicated script alias — `tscodekg-init`,
 `tscodekg-build`, `tscodekg-query`, `tscodekg-pack`, `tscodekg-analyze`,
-`tscodekg-centrality`, `tscodekg-install-hooks`, `tscodekg-download-model`,
-`tscodekg-mcp` — both forms are equivalent.
+`tscodekg-centrality`, `tscodekg-viz`, `tscodekg-viz3d`, `tscodekg-viz-timeline`,
+`tscodekg-install-hooks`, `tscodekg-download-model`, `tscodekg-mcp` — both forms
+are equivalent.
 
 ## MCP tools
 

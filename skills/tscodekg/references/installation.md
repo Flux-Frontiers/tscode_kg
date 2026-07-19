@@ -21,7 +21,7 @@ pip install tscode-kg                # extraction + CLI skeleton only
 
 Repo: <https://github.com/Flux-Frontiers/tscode_kg>
 
-The `[kg]` extra pulls in `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, and `networkx` — required for build, query, analyze, and the MCP server. The optional `[kgdeps]` extra adds `pycode-kg` and `doc-kg` for cross-KG work.
+The `[kg]` extra pulls in `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, and `networkx` — required for build, query, analyze, and the MCP server. The optional `[kgdeps]` extra adds `pycode-kg` and `doc-kg` for cross-KG work. The `[viz]` extra (streamlit, pyvis, plotly) enables `tscodekg viz` and `tscodekg viz-timeline`; the `[viz3d]` extra (pyvista, PyQt5) enables `tscodekg viz3d`.
 
 ---
 
@@ -115,7 +115,7 @@ Skip the installed hook for a single commit: `TSCODEKG_SKIP_SNAPSHOT=1 git commi
 
 ### Script aliases
 
-Every subcommand with an alias: `tscodekg-init`, `tscodekg-build`, `tscodekg-query`, `tscodekg-pack`, `tscodekg-analyze`, `tscodekg-centrality`, `tscodekg-install-hooks`, `tscodekg-download-model`, `tscodekg-mcp` — equivalent to the `tscodekg <subcommand>` form, handy in Makefiles and Poetry scripts.
+Every subcommand with an alias: `tscodekg-init`, `tscodekg-build`, `tscodekg-query`, `tscodekg-pack`, `tscodekg-analyze`, `tscodekg-centrality`, `tscodekg-viz`, `tscodekg-viz3d`, `tscodekg-viz-timeline`, `tscodekg-install-hooks`, `tscodekg-download-model`, `tscodekg-mcp` — equivalent to the `tscodekg <subcommand>` form, handy in Makefiles and Poetry scripts.
 
 ---
 

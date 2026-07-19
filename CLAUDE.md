@@ -71,6 +71,9 @@ Each command is available as a `tscodekg <subcommand>` **or** (where noted) a de
 | `bridges` | Module connectivity ranking |
 | `framework-nodes` | Framework-like hub module detection |
 | `snapshot save/list/show/diff/prune` | Temporal metric snapshots |
+| `viz` / `tscodekg-viz` | Launch Streamlit interactive visualizer |
+| `viz3d` / `tscodekg-viz3d` | Launch 3D PyVista/PyQt5 visualizer |
+| `viz-timeline` / `tscodekg-viz-timeline` | Plotly timeline of snapshot metrics |
 | `install-hooks` / `tscodekg-install-hooks` | Install pre-commit git hook for automatic snapshots |
 | `download-model` / `tscodekg-download-model` | Cache the embedding model for offline use |
 | `mcp` / `tscodekg-mcp` | Start MCP server for Claude/Cursor/Continue |

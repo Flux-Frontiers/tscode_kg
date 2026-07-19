@@ -106,6 +106,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `setup-tscodekg-mcp`, `sync-mcp-docs`, `changelog-commit`, `release`.
 - **Tests**: `test_centrality.py`, `test_coderank.py`, `test_explain.py`,
   `test_bridge.py`, `test_exclusions.py` adapted from PyCodeKG's suite.
+- **Streamlit visualizer** (`tscode_kg/app.py`, `tscodekg viz` +
+  `tscodekg-viz`) — port of PyCodeKG's interactive graph explorer over the
+  shared `kg_utils` GraphStore, with the TS kind palette (interface,
+  type_alias, enum, namespace shapes/colors), IMPLEMENTS/EXTENDS edge colors,
+  JSDoc labels, TypeScript snippet highlighting, and `TSCODEKG_DB` /
+  `TSCODEKG_VECTORS` env vars. Requires the new `viz` extra
+  (streamlit, pyvis, plotly).
+- **3-D visualizer** (`tscode_kg/viz3d.py` + `layout3d.py`, `tscodekg viz3d`
+  + `tscodekg-viz3d`) — port of the PyVista/PyQt5 Allium & Funnel renderer:
+  TS kinds colored/sized/stratified (interfaces share the class layer and
+  octahedron LOD geometry), IMPLEMENTS/EXTENDS edge checkboxes and colors,
+  interface counts in the stats panel and title bar, and a JSDoc popup that
+  parses both `:param:` and `@param` doc styles. Requires the new `viz3d`
+  extra (pyvista, PyQt5, pyvistaqt, param, markdown, trame-vtk).
+- **Snapshot timeline** (`tscode_kg/viz3d_timeline.py`,
+  `tscodekg viz-timeline` + `tscodekg-viz-timeline`) — Plotly 2-D/3-D
+  temporal metrics visualization over `.tscodekg/snapshots/`, adapted to the
+  dict-based kg_utils snapshot metrics; `tests/test_viz3d_timeline.py`
+  ported (20 tests).
+- **`pycode-kg>=0.20.0` added to the dev dependency group and `dev` extra** —
+  this repo is Python, so a dev checkout needs `pycodekg` for the check-in
+  indexing/snapshot workflow. Note this pulls the semantic stack
+  (sentence-transformers) into `poetry install`; move it to an optional
+  group if CI install weight becomes a problem.
 
 ### Fixed
 

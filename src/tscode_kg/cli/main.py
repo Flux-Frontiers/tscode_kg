@@ -29,6 +29,7 @@ from tscode_kg.cli.cmd_mcp import mcp_cmd
 from tscode_kg.cli.cmd_model import download_model
 from tscode_kg.cli.cmd_query import pack, query
 from tscode_kg.cli.cmd_snapshot import snapshot
+from tscode_kg.cli.cmd_viz import viz, viz3d, viz_timeline
 
 
 @click.group()
@@ -47,6 +48,9 @@ cli.add_command(centrality)
 cli.add_command(bridges)
 cli.add_command(framework_nodes)
 cli.add_command(snapshot)
+cli.add_command(viz)
+cli.add_command(viz3d)
+cli.add_command(viz_timeline, name="viz-timeline")
 cli.add_command(install_hooks)
 cli.add_command(download_model)
 cli.add_command(mcp_cmd, name="mcp")
