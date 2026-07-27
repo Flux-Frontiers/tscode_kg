@@ -9,8 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`kgmodule-utils` floor lifted to `>=0.8.0`**; lock regenerated. 0.8.0
+  defaults `vector_backend` to `"auto"`, which matches what TypeScriptKG
+  already requests explicitly.
+
 - **BREAKING: vector store migrated from LanceDB to sqlite-vec**, mirroring the
-  PyCodeKG/DocKG refactor. `kgmodule-utils[semantic,sqlite-vec]>=0.6.2` and
+  PyCodeKG/DocKG refactor. `kgmodule-utils[semantic,sqlite-vec]>=0.8.0` and
   `TypeScriptKG.__init__` now passes `vector_backend="sqlite-vec"` to the
   `KGModule` base class. Vectors live in a single `.tscodekg/vectors.sqlite`
   file. **Migration: run `tscodekg build` once after upgrading.**
