@@ -61,19 +61,20 @@ In pip environments, plain `tscodekg --version` suffices. Document which runner 
    ```bash
    $RUNNER python -m pip show tscode-kg 2>/dev/null
    ```
-3. If missing, instruct the user to install it — **the `[kg]` extra is required** for build/query/MCP:
+3. If missing, instruct the user to install it — build/query/MCP all ship in the
+   base package, so no extra is needed:
    ```bash
-   pip install "tscode-kg[kg]"
+   pip install tscode-kg
    # or, in Poetry projects:
-   poetry add "tscode-kg[kg]"
+   poetry add tscode-kg
    ```
    Then stop — the user must install before continuing.
 
-4. Confirm the `mcp` Python package is importable (it comes from the `[kg]` extra):
+4. Confirm the `mcp` Python package is importable:
    ```bash
    $RUNNER python -c "import mcp; print('mcp OK')"
    ```
-   If this fails, the `[kg]` extra was not installed — reinstall with `pip install "tscode-kg[kg]"`.
+   If this fails, the install is incomplete — reinstall with `pip install tscode-kg`.
 
 5. Check the TypeScriptKG version:
    ```bash
@@ -261,15 +262,15 @@ Suggested first query after restart:
 - **Do NOT modify source files** in the target repository.
 - **Do NOT run `git commit`** or any destructive git operations.
 - Use **absolute paths** everywhere — relative paths will break MCP clients.
-- The `mcp` package comes from the **`[kg]` extra** — install `tscode-kg[kg]`, not bare `tscode-kg`.
+- The `mcp` package ships in the base install — plain `pip install tscode-kg` is enough.
 - If any step fails, stop and report the error clearly before proceeding.
 - If the user's repo is very large, warn that the build and embedding steps take a while on first run (model download + embedding).
 
 | Error | Fix |
 |-------|-----|
-| `tscodekg: command not found` | `pip install "tscode-kg[kg]"` or use the absolute venv binary |
+| `tscodekg: command not found` | `pip install tscode-kg` or use the absolute venv binary |
 | `Current Python version is not allowed by the project` | Use `.venv/bin/tscodekg` directly instead of `poetry run tscodekg` |
-| `ModuleNotFoundError: No module named 'mcp'` | Install the extra: `pip install "tscode-kg[kg]"` |
+| `ModuleNotFoundError: No module named 'mcp'` | Install the extra: `pip install tscode-kg` |
 | `WARNING: SQLite database not found` | Run `tscodekg build --repo "$REPO_ROOT"` first |
 | Empty query results | `tscodekg build --repo "$REPO_ROOT" --index-only --wipe` |
 | Server not appearing in Claude Code | Absolute binary path in `.mcp.json`; restart Claude Code |

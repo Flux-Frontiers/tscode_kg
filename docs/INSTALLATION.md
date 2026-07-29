@@ -15,14 +15,12 @@ TypeScriptKG is a Python tool: it indexes TypeScript/JavaScript repositories (`.
 ## Install via pip
 
 ```bash
-# Core install (tree-sitter extraction + CLI skeleton)
+# Everything: tree-sitter extraction, SQLite graph, sqlite-vec index,
+# hybrid query, and the MCP server
 pip install tscode-kg
 
-# Full knowledge graph: SQLite graph + sqlite-vec index + hybrid query + MCP server
-pip install 'tscode-kg[kg]'
-
 # Cross-KG: also install PyCodeKG and DocKG for multi-graph setups
-pip install 'tscode-kg[kg,kgdeps]'
+pip install 'tscode-kg[kgdeps]'
 ```
 
 ---
@@ -30,25 +28,17 @@ pip install 'tscode-kg[kg,kgdeps]'
 ## Install via Poetry
 
 ```bash
-# Core
 poetry add tscode-kg
 
-# Full knowledge graph (recommended)
-poetry add "tscode-kg[kg]"
-
 # Cross-KG extras
-poetry add "tscode-kg[kg,kgdeps]"
+poetry add "tscode-kg[kgdeps]"
 ```
 
 Or in `pyproject.toml`:
 
 ```toml
 [tool.poetry.dependencies]
-# Core
 tscode-kg = ">=0.1.0"
-
-# Full knowledge graph
-tscode-kg = {version = ">=0.1.0", extras = ["kg"]}
 ```
 
 > **TypeScriptKG developers:** Use `pip install -e ".[dev]"` (or `poetry install` with the `dev` extra) for the full dev environment. The `extras` mechanism above is for *consumers* of the package.

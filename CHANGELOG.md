@@ -36,7 +36,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped `rich>=14.3.3,<15`, `tree-sitter>=0.25.0`,
   `tree-sitter-typescript>=0.23.2` to match current releases.
 
+- **`mcp` upper-bounded to `<2`.** mcp 2.0 removed the bundled
+  `mcp.server.fastmcp` module — FastMCP was split out into the standalone
+  `fastmcp` package — so the previously unbounded `mcp>=1.0.0` let a clean
+  install from PyPI pull 2.x and break `tscodekg-mcp` at import. Lift only
+  alongside a port to the standalone package.
+
+- **BREAKING (packaging): the `kg` extra is dissolved into core dependencies.**
+  `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, and `networkx` are now
+  unconditional, and `tscode-kg[kg]` is no longer a valid install target — use
+  plain `tscode-kg`. Installing with the old extra name will fail.
+
+  The split had become incoherent. `[project.scripts]` advertised
+  `tscodekg-mcp` unconditionally while the package it needs sat behind an
+  extra, so a base install handed the user a command that could not run. The
+  split also could not be repaired by promoting `mcp` alone: `mcp_server.py`
+  imports `kg_utils.semantic` and `tscode_kg.kg` at module level, so a base
+  install would simply have failed on a different import.
+
+  This aligns TypeScriptKG with the rest of the KG family — pycode_kg, doc_kg,
+  memory_kg, diary_kg, Metabo_kg, agent_kg, and kgrag all carry `mcp` in core
+  dependencies, and pycode_kg has no such extra at all. Cost: a base install
+  now pulls the sentence-transformers/torch stack. `kgdeps`, `viz`, `viz3d`,
+  and `dev` are unchanged.
+
 ### Added
+
+- **Import-level MCP server tests** (`tests/test_mcp_server.py`). `mcp_server.py`
+  builds its `FastMCP` instance and registers all 19 tools at module import, so
+  an incompatible `mcp` breaks `tscodekg-mcp` at import time — invisibly to
+  anyone with a pinned lock file. With `mcp` now a core dependency these run
+  unconditionally, including in CI, which installs `--extras dev`.
 
 - **New `kgdeps` optional-dependency group** (`pycode-kg>=0.20.0`,
   `doc-kg>=0.18.1`) so PyCodeKG and DocKG are usable directly from within
