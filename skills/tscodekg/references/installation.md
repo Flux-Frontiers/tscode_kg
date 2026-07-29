@@ -14,9 +14,8 @@
 ## Installation
 
 ```bash
-pip install "tscode-kg[kg]"          # full KG stack (recommended)
-poetry add "tscode-kg[kg]"           # Poetry projects
-pip install tscode-kg                # extraction + CLI skeleton only
+pip install tscode-kg                # full KG stack
+poetry add tscode-kg                 # Poetry projects
 ```
 
 Repo: <https://github.com/Flux-Frontiers/tscode_kg>
@@ -268,7 +267,7 @@ sqlite3 .tscodekg/graph.sqlite "SELECT COUNT(*) FROM nodes; SELECT COUNT(*) FROM
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `ModuleNotFoundError: No module named 'mcp'` | `[kg]` extra not installed | `pip install "tscode-kg[kg]"` |
+| `ModuleNotFoundError: No module named 'mcp'` | Incomplete install | `pip install tscode-kg` |
 | `WARNING: SQLite database not found` | Graph not built | `tscodekg build --repo .` |
 | Empty results from `query_codebase` | Vector store stale or missing | `tscodekg build --repo . --index-only --wipe` |
 | `RuntimeError: TypeScriptKG not initialised` | Server not started via CLI | Always start with `tscodekg mcp` / `tscodekg-mcp --repo ...` |

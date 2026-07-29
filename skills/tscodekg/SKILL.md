@@ -1,6 +1,6 @@
 ---
 name: tscodekg
-description: Expert knowledge for installing, configuring, and using the TypeScriptKG MCP server — a hybrid semantic + structural knowledge graph for TypeScript/JavaScript codebases. Use this skill when the user asks about: setting up TypeScriptKG in a project, installing tscode-kg with pip or Poetry (pip install "tscode-kg[kg]"), building the SQLite graph or sqlite-vec vector index, configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the tscodekg CLI (tscodekg init, tscodekg build, tscodekg query, tscodekg pack, tscodekg analyze, tscodekg centrality, tscodekg bridges, tscodekg framework-nodes, tscodekg explain, tscodekg snapshot, tscodekg install-hooks, tscodekg download-model, tscodekg mcp), using the graph_stats / query_codebase / pack_snippets / callers / get_node / list_nodes / find_node / centrality / bridge_centrality / framework_nodes / find_definition_at / analyze_repo / explain / rank_nodes / query_ranked / explain_rank / snapshot_list / snapshot_show / snapshot_diff MCP tools, or troubleshooting TypeScriptKG errors.
+description: Expert knowledge for installing, configuring, and using the TypeScriptKG MCP server — a hybrid semantic + structural knowledge graph for TypeScript/JavaScript codebases. Use this skill when the user asks about: setting up TypeScriptKG in a project, installing tscode-kg with pip or Poetry (pip install tscode-kg), building the SQLite graph or sqlite-vec vector index, configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the tscodekg CLI (tscodekg init, tscodekg build, tscodekg query, tscodekg pack, tscodekg analyze, tscodekg centrality, tscodekg bridges, tscodekg framework-nodes, tscodekg explain, tscodekg snapshot, tscodekg install-hooks, tscodekg download-model, tscodekg mcp), using the graph_stats / query_codebase / pack_snippets / callers / get_node / list_nodes / find_node / centrality / bridge_centrality / framework_nodes / find_definition_at / analyze_repo / explain / rank_nodes / query_ranked / explain_rank / snapshot_list / snapshot_show / snapshot_diff MCP tools, or troubleshooting TypeScriptKG errors.
 ---
 
 # TypeScriptKG Skill
@@ -15,16 +15,16 @@ TypeScriptKG (package `tscode-kg`, import `tscode_kg`) indexes TypeScript/JavaSc
 
 ```bash
 # pip — full KG stack (graph store + sqlite-vec index + hybrid query + MCP server)
-pip install "tscode-kg[kg]"
+pip install tscode-kg
 
 # Poetry
-poetry add "tscode-kg[kg]"
+poetry add tscode-kg
 
 # From source
-poetry add "tscode-kg[kg] @ git+https://github.com/Flux-Frontiers/tscode_kg.git"
+poetry add "tscode-kg @ git+https://github.com/Flux-Frontiers/tscode_kg.git"
 ```
 
-The bare package (`pip install tscode-kg`) installs only tree-sitter extraction and the CLI skeleton; the `[kg]` extra adds `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, and `networkx` — required for build/query/analyze/MCP.
+The base package carries the whole stack — `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, and `networkx` — so build/query/analyze/MCP all work from a plain install. Optional extras cover cross-KG (`kgdeps`) and the visualizers (`viz`, `viz3d`).
 
 ## One-Command Setup
 
@@ -308,7 +308,7 @@ If you want snapshot history in git, un-ignore `.tscodekg/snapshots/` — the pr
 
 | Error | Fix |
 |---|---|
-| `ModuleNotFoundError: No module named 'mcp'` | Install the extra: `pip install "tscode-kg[kg]"` |
+| `ModuleNotFoundError: No module named 'mcp'` | Install the extra: `pip install tscode-kg` |
 | `WARNING: SQLite database not found` | Run `tscodekg build --repo .` first |
 | MCP server not appearing | Use absolute paths in `.mcp.json`; restart Claude Code |
 | Empty query results | Rebuild the index: `tscodekg build --repo . --index-only --wipe` |

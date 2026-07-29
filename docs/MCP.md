@@ -544,7 +544,7 @@ Higher `hop` values expand the result set geometrically. Use `max_nodes` in `pac
 | `RuntimeError: TypeScriptKG not initialised` | Server called without `main()` | Always start via `tscodekg mcp` / `tscodekg-mcp` |
 | Snippets show wrong line numbers | Source files changed since build | `tscodekg build --wipe` |
 | MCP server not appearing in agent | Wrong/relative paths in MCP config, or agent not restarted | See [INSTALLATION.md § MCP Server Setup](INSTALLATION.md#mcp-server-setup) — all paths must be absolute |
-| `tscodekg` command not found | Package not installed or venv not active | `pip install 'tscode-kg[kg]'`, or use the absolute venv path |
+| `tscodekg` command not found | Package not installed or venv not active | `pip install tscode-kg`, or use the absolute venv path |
 | `WARNING: SQLite database not found` at server start | Graph never built for this repo | `tscodekg build --repo .` first |
 
 For installation, build, and per-agent config issues see [INSTALLATION.md](INSTALLATION.md).

@@ -14,20 +14,12 @@ out into the standalone ``fastmcp`` package), which makes the import at
 that reason; these tests fail loudly if the pin is lifted without porting the
 server, instead of shipping a broken console script.
 
-``mcp`` lives in the ``kg`` extra, so these skip when it is absent entirely.
-They still fail — rather than skip — when ``mcp`` is installed at the wrong
-major, which is the case that matters.
-
 Ported from pycode_kg's ``tests/test_mcp_server.py``.
 """
 
 from __future__ import annotations
 
 import importlib
-
-import pytest
-
-pytest.importorskip("mcp", reason="MCP server requires the kg extra (mcp)")
 
 
 def test_server_module_imports():

@@ -5,11 +5,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-import pytest
-
-pytest.importorskip("networkx", reason="coderank requires the kg extra (networkx)")
-
-from tscode_kg.coderank import (  # noqa: E402
+from tscode_kg.coderank import (
     build_code_graph,
     combine_hybrid_scores,
     compute_coderank,
