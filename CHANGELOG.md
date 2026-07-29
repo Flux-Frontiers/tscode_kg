@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`kgmodule-utils` floor lifted to `>=0.9.0`**; lock regenerated. The floor
+  had drifted a release behind the published version, so a fresh install could
+  resolve an older shared core than the one this package is tested against.
+
+- **`pycode-kg` floor lifted to `>=0.21.1,<0.22`** (was `>=0.20.0,<0.21`) in
+  both the `kgdeps` and `dev` extras. This was forced by the bump above and is
+  the more consequential half of it: kgmodule-utils 0.9.0 requires
+  `transformers>=5.5.0,<6`, while pycode-kg 0.20.0 caps `transformers<4.57` —
+  the pre-CVE range. The two are unsatisfiable together, so the old ceiling had
+  been holding this repo on a `transformers` line with two known
+  high-severity CVEs. Now resolves pycode-kg 0.21.1 and transformers 5.14.1.
+  Suite green (78 passed, integration deselected).
+
 ### Added
 
 ### Changed
