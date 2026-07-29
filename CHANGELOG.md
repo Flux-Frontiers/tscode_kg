@@ -36,7 +36,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped `rich>=14.3.3,<15`, `tree-sitter>=0.25.0`,
   `tree-sitter-typescript>=0.23.2` to match current releases.
 
+- **`mcp` upper-bounded to `<2`** in the `kg` extra. mcp 2.0 removed the bundled
+  `mcp.server.fastmcp` module — FastMCP was split out into the standalone
+  `fastmcp` package — so the previously unbounded `mcp>=1.0.0` let a clean
+  install from PyPI pull 2.x and break `tscodekg-mcp` at import. Lift only
+  alongside a port to the standalone package.
+
 ### Added
+
+- **Import-level MCP server tests** (`tests/test_mcp_server.py`). `mcp_server.py`
+  builds its `FastMCP` instance and registers all 19 tools at module import, so
+  an incompatible `mcp` breaks `tscodekg-mcp` at import time — invisibly to
+  anyone with a pinned lock file. The tests skip when the `kg` extra is absent,
+  but fail — rather than skip — when `mcp` is present at an incompatible major.
 
 - **New `kgdeps` optional-dependency group** (`pycode-kg>=0.20.0`,
   `doc-kg>=0.18.1`) so PyCodeKG and DocKG are usable directly from within

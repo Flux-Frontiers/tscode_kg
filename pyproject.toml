@@ -62,7 +62,13 @@ dependencies = [
 # Full KG: SQLite graph store + sqlite-vec vector index + hybrid query + MCP server
 kg = [
     "kgmodule-utils[semantic,sqlite-vec]>=0.8.0",
-    "mcp>=1.0.0",
+    # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
+    # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
+    # mcp.server around new submodules. src/tscode_kg/mcp_server.py imports
+    # FastMCP from mcp, so an unbounded floor lets a clean install pull 2.x and
+    # break `tscodekg-mcp` at import time. Lift this only alongside a port to
+    # the standalone fastmcp package.
+    "mcp>=1.0.0,<2",
     "networkx>=3.0",
 ]
 # Cross-KG: PyCodeKG (Python codebases) and DocKG (docs) available from within tscode_kg
