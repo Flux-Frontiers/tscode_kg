@@ -1,20 +1,4 @@
-# TypeScriptKG generated artifacts
-# MUST include .tscodekg/snapshots!
-.tscodekg/lancedb/
-.tscodekg/lancedb-*
-.tscodekg/vectors.sqlite
-.tscodekg/vectors.sqlite*
-.tscodekg/graph.sqlite
-.tscodekg/graph.sqlite*
-.tscodekg/models/
 
-# PyCodeKG artifacts — this repo is Python, so pycodekg indexes it on commit
-# MUST include .pycodekg/snapshots!
-.pycodekg/vectors.sqlite
-.pycodekg/vectors.sqlite*
-.pycodekg/graph.sqlite
-.pycodekg/graph.sqlite*
-.pycodekg/models/
 .kgcache/
 
 # Python
@@ -36,3 +20,41 @@ dist/
 .next/
 .nuxt/
 
+# === KG generated artifacts (normalized across the fleet) ===
+# Databases, vector indexes and model caches are transient and
+# reproducible. snapshots/ is TRACKED and must never be ignored --
+# never use a bare `**/.<ns>/` pattern here, it swallows snapshots too.
+
+**/.pycodekg/lancedb/
+**/.pycodekg/lancedb-*
+**/.pycodekg/*.sqlite
+**/.pycodekg/*.sqlite-shm
+**/.pycodekg/*.sqlite-wal
+**/.pycodekg/*.db
+**/.pycodekg/models
+
+**/.dockg/lancedb/
+**/.dockg/lancedb-*
+**/.dockg/*.sqlite
+**/.dockg/*.sqlite-shm
+**/.dockg/*.sqlite-wal
+**/.dockg/*.db
+**/.dockg/models
+**/.dockg/embeddings.json
+
+**/.tscodekg/lancedb/
+**/.tscodekg/lancedb-*
+**/.tscodekg/*.sqlite
+**/.tscodekg/*.sqlite-shm
+**/.tscodekg/*.sqlite-wal
+**/.tscodekg/*.db
+**/.tscodekg/models
+
+# Agent scratch dirs (Claude Code / Codex)
+.agents/
+.codex/
+
+# MCP server config -- machine-specific, contains absolute paths
+.mcp.json
+.mcp.json.sav
+# === end KG generated artifacts ===
