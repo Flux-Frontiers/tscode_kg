@@ -89,7 +89,7 @@ description = "Annotate AST trees with source code positions"
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "asttokens-3.0.2-py3-none-any.whl", hash = "sha256:9da13157f5b28becde0bd374fc677dcd3c290614264eff096f167c469cd9f933"},
     {file = "asttokens-3.0.2.tar.gz", hash = "sha256:3ecdbd8f2cc195f53ccada3a613538bb5f9ef6f6869129f13e03c30a677b8fe2"},
@@ -402,7 +402,7 @@ description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 groups = ["main"]
-markers = "platform_system == \"Windows\" or sys_platform == \"win32\" and (extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\")"
+markers = "platform_system == \"Windows\" or sys_platform == \"win32\" and (extra == \"viz\" or extra == \"dev\")"
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
@@ -820,7 +820,7 @@ description = "Decorators for Humans"
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "decorator-5.3.1-py3-none-any.whl", hash = "sha256:f47fe6fdbd2edd623ecfe36875d37aba411624e2670dd395dddae1358689bb3c"},
     {file = "decorator-5.3.1.tar.gz", hash = "sha256:4cbcdd55a6efadb9dbea26b858f4fb3264567b52d69ca0d25b721b553f60ea82"},
@@ -965,7 +965,7 @@ description = "Get the currently executing AST node of a frame, and other inform
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "executing-2.2.1-py2.py3-none-any.whl", hash = "sha256:760643d3452b4d777d295bb167ccc74c64a81df23fb5e08eff250c425a4b2017"},
     {file = "executing-2.2.1.tar.gz", hash = "sha256:3632cc370565f6648cc328b32435bd120a1e4ebb20c77e3fdde9a13cd1e533c4"},
@@ -1398,7 +1398,7 @@ description = "IPython: Productive Interactive Computing"
 optional = true
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "ipython-9.15.0-py3-none-any.whl", hash = "sha256:515ad9c3cdf0c932a5a9f6245419e8aba706b7bd03c3e1d3a1c83d9351d6aa6e"},
     {file = "ipython-9.15.0.tar.gz", hash = "sha256:da2819ce2aa83135257df830660b1176d986c3d2876db24df01974fa955b2756"},
@@ -1432,7 +1432,7 @@ description = "Defines a variety of Pygments lexers for highlighting IPython cod
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "ipython_pygments_lexers-1.1.1-py3-none-any.whl", hash = "sha256:a9462224a505ade19a605f71f8fa63c2048833ce50abc86768a0d81d876dc81c"},
     {file = "ipython_pygments_lexers-1.1.1.tar.gz", hash = "sha256:09c0138009e56b6854f9535736f4171d855c8c08a563a0dcd8022f78355c7e81"},
@@ -1477,7 +1477,7 @@ description = "An autocompletion tool for Python that can be used for text edito
 optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "jedi-0.20.0-py2.py3-none-any.whl", hash = "sha256:7bdd9c2634f56713299976f4cbd59cb3fa92165cc5e05ea811fb253480728b67"},
     {file = "jedi-0.20.0.tar.gz", hash = "sha256:c3f4ccbd276696f4b19c54618d4fb18f9fc24b0aef02acf704b23f487daa1011"},
@@ -1527,7 +1527,7 @@ description = "jsonpickle encodes/decodes any Python object to/from JSON"
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "jsonpickle-4.1.2-py3-none-any.whl", hash = "sha256:7ffe34426bc797684dbf1dc84185558bd864cd25b1ff5fb01b7405e392d0a937"},
     {file = "jsonpickle-4.1.2.tar.gz", hash = "sha256:8afed18aa189fd81e2e833b426bb4af485594921f0b1d36c2001fc5637a2f210"},
@@ -1592,7 +1592,6 @@ files = [
 [package.dependencies]
 lancedb = {version = ">=0.19.0", optional = true, markers = "extra == \"semantic\""}
 numpy = {version = ">=1.24.0", optional = true, markers = "extra == \"semantic\""}
-pyvis = {version = ">=0.3.2", optional = true, markers = "extra == \"viz\""}
 rich = {version = ">=13.0.0", optional = true, markers = "extra == \"semantic\""}
 sentence-transformers = {version = ">=5.4.1", optional = true, markers = "extra == \"semantic\""}
 sqlite-vec = {version = "0.1.9", optional = true, markers = "extra == \"semantic\" or extra == \"sqlite-vec\""}
@@ -2015,7 +2014,7 @@ description = "Inline Matplotlib backend for Jupyter"
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "matplotlib_inline-0.2.2-py3-none-any.whl", hash = "sha256:3c821cf1c209f59fb2d2d64abbf5b23b67bcb2210d663f9918dd851c6da1fcf6"},
     {file = "matplotlib_inline-0.2.2.tar.gz", hash = "sha256:72f3fe8fce36b70d4a5b612f899090cd0401deddc4ea90e1572b9f4bfb058c79"},
@@ -2555,7 +2554,7 @@ description = "Powerful data structures for data analysis, time series, and stat
 optional = true
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"kgdeps\" or extra == \"viz\""
 files = [
     {file = "pandas-3.0.3-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:455f6f8139d4282188f526868dbc3c828470e88a3d9d59a891bd46a455f21b98"},
     {file = "pandas-3.0.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4e15135e2ee5df1063313e2425ceef8ac0f4ae775893815b0923651b806a5639"},
@@ -2667,7 +2666,7 @@ description = "A Python Parser"
 optional = true
 python-versions = ">=3.6"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "parso-0.8.7-py2.py3-none-any.whl", hash = "sha256:a8926eb2a1b915486941fdbd31e86a4baf88fe8c210f25f2f35ecec5b574ca1c"},
     {file = "parso-0.8.7.tar.gz", hash = "sha256:eaaac4c9fdd5e9e8852dc778d2d7405897ec510f2a298071453e5e3a07914bb1"},
@@ -2684,7 +2683,7 @@ description = "Pexpect allows easy control of interactive console applications."
 optional = true
 python-versions = "*"
 groups = ["main"]
-markers = "(extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\") and sys_platform != \"win32\" and sys_platform != \"emscripten\""
+markers = "extra == \"viz\" and sys_platform != \"win32\" and sys_platform != \"emscripten\""
 files = [
     {file = "pexpect-4.9.0-py2.py3-none-any.whl", hash = "sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523"},
     {file = "pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f"},
@@ -2908,7 +2907,7 @@ description = "Library for building powerful interactive command lines in Python
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "prompt_toolkit-3.0.52-py3-none-any.whl", hash = "sha256:9aac639a3bbd33284347de5ad8d68ecc044b91a762dc39b7c21095fcd6a19955"},
     {file = "prompt_toolkit-3.0.52.tar.gz", hash = "sha256:28cde192929c8e7321de85de1ddbe736f1375148b02f2e17edd840042b1be855"},
@@ -2943,7 +2942,7 @@ description = "Cross-platform lib for process and system monitoring."
 optional = true
 python-versions = ">=3.6"
 groups = ["main"]
-markers = "(extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\") and (sys_platform == \"linux\" or sys_platform == \"win32\" or platform_machine != \"aarch64\" and platform_machine != \"x86_64\" or sys_platform != \"linux\" and sys_platform != \"emscripten\" and sys_platform != \"cygwin\") and (sys_platform == \"linux\" or sys_platform == \"win32\" or sys_platform != \"emscripten\" and sys_platform != \"cygwin\") and (sys_platform == \"linux\" or sys_platform == \"win32\" or sys_platform != \"linux\" and sys_platform != \"win32\" and sys_platform != \"emscripten\" and sys_platform != \"cygwin\" or platform_machine != \"x86_64\") and (sys_platform != \"emscripten\" and sys_platform != \"cygwin\" or extra == \"viz\" or platform_machine == \"x86_64\")"
+markers = "extra == \"viz\" and (sys_platform == \"linux\" or sys_platform == \"win32\") or extra == \"viz\" and sys_platform != \"linux\" and sys_platform != \"emscripten\" and sys_platform != \"cygwin\" and sys_platform != \"win32\" or extra == \"viz\" and sys_platform != \"linux\" and sys_platform != \"emscripten\" and sys_platform != \"cygwin\" and platform_machine != \"x86_64\" or extra == \"viz\" and platform_machine != \"aarch64\" and platform_machine != \"x86_64\" and sys_platform != \"emscripten\" and sys_platform != \"cygwin\""
 files = [
     {file = "psutil-7.2.2-cp313-cp313t-macosx_10_13_x86_64.whl", hash = "sha256:2edccc433cbfa046b980b0df0171cd25bcaeb3a68fe9022db0979e7aa74a826b"},
     {file = "psutil-7.2.2-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:e78c8603dcd9a04c7364f1a3e670cea95d51ee865e4efb3556a3a63adef958ea"},
@@ -2979,7 +2978,7 @@ description = "Run a subprocess in a pseudo terminal"
 optional = true
 python-versions = "*"
 groups = ["main"]
-markers = "(extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\") and sys_platform != \"win32\" and sys_platform != \"emscripten\""
+markers = "extra == \"viz\" and sys_platform != \"win32\" and sys_platform != \"emscripten\""
 files = [
     {file = "ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35"},
     {file = "ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220"},
@@ -2992,7 +2991,7 @@ description = "Safely evaluate AST nodes without side effects"
 optional = true
 python-versions = "*"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "pure_eval-0.2.3-py3-none-any.whl", hash = "sha256:1db8e35b67b3d218d818ae653e27f06c3aa420901fa7b081ca98cbedc874e0d0"},
     {file = "pure_eval-0.2.3.tar.gz", hash = "sha256:5f4e983f40564c576c7c8635ae88db5956bb2229d7e9237d03b3c0b0190eaf42"},
@@ -3053,38 +3052,6 @@ files = [
     {file = "pyarrow-25.0.0-cp314-cp314t-win_amd64.whl", hash = "sha256:13240f0d3dc5932ccd0bfa90cd76d835680b9d94a7661c635df4b703d40ce849"},
     {file = "pyarrow-25.0.0.tar.gz", hash = "sha256:d2d697008b5ec06d75952ef260c2e9a8a0f6ccfce24266c04c9c8ade927cb3b4"},
 ]
-
-[[package]]
-name = "pycode-kg"
-version = "0.21.1"
-description = "A tool to build a searchable knowledge graph from Python repositories"
-optional = true
-python-versions = "<3.14,>=3.12"
-groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\""
-files = [
-    {file = "pycode_kg-0.21.1-py3-none-any.whl", hash = "sha256:3093460f0ce6af9dbc7eb8a9e1d929032593b36a6e2e3a9cff850be4a162f1a7"},
-    {file = "pycode_kg-0.21.1.tar.gz", hash = "sha256:bc56bee83041a9f0563d7e07d6e342168b2ba210e09f5099be1bb9f6f5730833"},
-]
-
-[package.dependencies]
-click = ">=8.1.0,<9"
-kgmodule-utils = {version = ">=0.9.0", extras = ["semantic", "sqlite-vec", "viz"]}
-mcp = ">=1.0.0,<2"
-networkx = ">=3.0"
-numpy = ">=1.24.0"
-pandas = ">=2.0.0"
-rich = ">=14.3.3,<15"
-safetensors = ">=0.5.0"
-sentence-transformers = ">=5.4.1"
-torch = ">=2.5.1"
-transformers = ">=5.5.0,<6"
-
-[package.extras]
-all = ["PyQt5 (>=5.15.0)", "detect-secrets (>=1.5.0)", "markdown (>=3.6)", "param (>=2.0.0)", "pdoc (>=14.0.0)", "plotly (>=5.14.0)", "pre-commit (>=4.5.1)", "pytest (>=8.0.0)", "pytest-cov (>=5.0.0)", "pyvis (>=0.3.2)", "pyvista[jupyter] (>=0.44.0)", "pyvistaqt (>=0.11.0)", "ruff (>=0.4.0)", "streamlit (>=1.56.0)", "trame-vtk (>=2.0.0)", "ty (>=0.0.41)"]
-dev = ["detect-secrets (>=1.5.0)", "pdoc (>=14.0.0)", "pre-commit (>=4.5.1)", "pytest (>=8.0.0)", "pytest-cov (>=5.0.0)", "ruff (>=0.4.0)", "ty (>=0.0.41)"]
-viz = ["plotly (>=5.14.0)", "pyvis (>=0.3.2)", "streamlit (>=1.56.0)"]
-viz3d = ["PyQt5 (>=5.15.0)", "markdown (>=3.6)", "param (>=2.0.0)", "pyvista[jupyter] (>=0.44.0)", "pyvistaqt (>=0.11.0)", "trame-vtk (>=2.0.0)"]
 
 [[package]]
 name = "pycparser"
@@ -3622,7 +3589,7 @@ description = "A Python network graph visualization library"
 optional = true
 python-versions = ">3.6"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "pyvis-0.3.2-py3-none-any.whl", hash = "sha256:5720c4ca8161dc5d9ab352015723abb7a8bb8fb443edeb07f7a322db34a97555"},
 ]
@@ -4487,7 +4454,7 @@ description = "Extract data from python stack frames and tracebacks for informat
 optional = true
 python-versions = "*"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "stack_data-0.6.3-py3-none-any.whl", hash = "sha256:d5558e0c25a4cb0853cddad3d77da9891a08cb85dd9f9f91b9f8cd66e511e695"},
     {file = "stack_data-0.6.3.tar.gz", hash = "sha256:836a778de4fec4dcd1dcd89ed8abff8a221f58308462e1c4aa2a3cf30148f0b9"},
@@ -4782,7 +4749,7 @@ description = "Traitlets Python configuration system"
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "traitlets-5.15.1-py3-none-any.whl", hash = "sha256:770a53705f84b81ac107e83a1b3328ff2dae16094d8fc3cfc004e4b22dfd8e92"},
     {file = "traitlets-5.15.1.tar.gz", hash = "sha256:7b1c07854fe25acb39e009bae49f11b79ff6cbb2f27999104e9110e7a6b53722"},
@@ -5087,7 +5054,7 @@ description = "Provider of IANA time zone data"
 optional = true
 python-versions = ">=2"
 groups = ["main"]
-markers = "(sys_platform == \"win32\" or sys_platform == \"emscripten\") and (extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\")"
+markers = "(sys_platform == \"win32\" or sys_platform == \"emscripten\") and (extra == \"kgdeps\" or extra == \"viz\")"
 files = [
     {file = "tzdata-2026.3-py2.py3-none-any.whl", hash = "sha256:dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931"},
     {file = "tzdata-2026.3.tar.gz", hash = "sha256:4a1518b8993086a7982523e071643f3c0e5f213e75b21318e78bcabfff9d1415"},
@@ -5251,7 +5218,7 @@ description = "Measures the displayed width of unicode strings in a terminal"
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"dev\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "wcwidth-0.8.2-py3-none-any.whl", hash = "sha256:d63947694a0539a1d51e01eda7caf800c291020e6cdd7e28ad7b14dd33ad4f85"},
     {file = "wcwidth-0.8.2.tar.gz", hash = "sha256:91fbef97204b96a3d4d421609b80340b760cf33e26da123ff243d76b1fda8dda"},
@@ -5378,12 +5345,12 @@ files = [
 ]
 
 [extras]
-dev = ["detect-secrets", "pre-commit", "pycode-kg", "pylint", "pytest", "pytest-cov", "ruff", "ty"]
-kgdeps = ["doc-kg", "pycode-kg"]
+dev = ["detect-secrets", "pre-commit", "pylint", "pytest", "pytest-cov", "ruff", "ty"]
+kgdeps = ["doc-kg"]
 viz = ["plotly", "pyvis", "streamlit"]
 viz3d = ["PyQt5", "markdown", "param", "pyvista", "pyvistaqt", "trame-vtk"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "9f54f6005036008918b13ccf20e357f0abdb7c3aa9037446b84d39c20fd93457"
+content-hash = "4d933db049e1fa55a531ba22fc8ba1a447588515e193a00e3f91c805e3d4bb3b"

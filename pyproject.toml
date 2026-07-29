@@ -67,9 +67,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Cross-KG: PyCodeKG (Python codebases) and DocKG (docs) available from within tscode_kg
+# pycode-kg is deliberately NOT declared anywhere in this file. It is never
+# imported by this package -- PyCodeKG indexes this repo's Python source from
+# the outside, via the `pycodekg` CLI in the pre-commit hook. Declaring it
+# forces poetry's universal resolution to reconcile pycode-kg's transformers
+# pin against this project's own, and those constraints deadlock:
+# kgmodule-utils >=0.9.0 needs transformers>=5.5.0,<6 while older pycode-kg
+# caps it below 4.57. That ceiling silently held this repo on the pre-CVE
+# transformers line. Install it into the venv by hand instead:
+#   poetry run pip install pycode-kg
+# Cross-KG: DocKG (docs) available from within tscode_kg
 kgdeps = [
-    "pycode-kg>=0.21.1,<0.22",
     "doc-kg>=0.18.1",
 ]
 # Streamlit graph explorer + plotly timeline.
@@ -95,8 +103,10 @@ viz3d = [
 ]
 dev = [
     "detect-secrets>=1.5.0",
-    # This repo is Python — pycodekg indexes it and runs in the pre-commit hook.
-    "pycode-kg>=0.21.1,<0.22",
+    # NOTE: pycode-kg is NOT listed here even though the pre-commit hook runs
+    # `pycodekg build` against this repo. See the comment above [project.
+    # optional-dependencies]; install it by hand with
+    # `poetry run pip install pycode-kg`.
     "ty>=0.0.41",
     "pre-commit>=4.5.1",
     "pylint>=4.0.5",
