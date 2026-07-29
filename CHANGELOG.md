@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [0.2.0] - 2026-07-29
+
 ### Changed
 
 - **`kgmodule-utils` floor lifted to `>=0.8.0`**; lock regenerated. 0.8.0

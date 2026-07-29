@@ -18,7 +18,7 @@ KGExtractor SDK::
     from tscode_kg import TSCodeExtractor
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "Eric G. Suchanek, PhD"
 
 from tscode_kg.extractor import TSCodeExtractor
