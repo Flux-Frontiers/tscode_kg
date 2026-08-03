@@ -827,21 +827,6 @@ files = [
 ]
 
 [[package]]
-name = "deprecation"
-version = "2.1.0"
-description = "A library to handle automated deprecations"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "deprecation-2.1.0-py2.py3-none-any.whl", hash = "sha256:a10811591210e1fb0e768a8c25517cabeabcba6f0bf96564f8ff45189f90b14a"},
-    {file = "deprecation-2.1.0.tar.gz", hash = "sha256:72b3bde64e5d778694b0cf68178aed03d15e15477116add3fb773e581f9518ff"},
-]
-
-[package.dependencies]
-packaging = "*"
-
-[[package]]
 name = "detect-secrets"
 version = "1.5.0"
 description = "Tool for detecting secrets in the codebase"
@@ -894,37 +879,31 @@ files = [
 
 [[package]]
 name = "doc-kg"
-version = "0.19.1"
+version = "0.21.0"
 description = "A tool to build a semantically searchable knowledge graph from markdown and text documents"
 optional = true
 python-versions = "<3.14,>=3.12"
 groups = ["main"]
 markers = "extra == \"kgdeps\""
 files = [
-    {file = "doc_kg-0.19.1-py3-none-any.whl", hash = "sha256:9ec89dfd8ee1be3ac9cc7c646bbbf6195e25d4cec35fdfc57223e699468dc3c1"},
-    {file = "doc_kg-0.19.1.tar.gz", hash = "sha256:f2ed91ad898efcbd48f69ea72d7ef09356dbe84dd12ce8c22d3465308b98af8b"},
+    {file = "doc_kg-0.21.0-py3-none-any.whl", hash = "sha256:5198a82a4005e7bdaa424f82c0c79a96d94747acd11b9ac72ebe7feeec0b3e20"},
+    {file = "doc_kg-0.21.0.tar.gz", hash = "sha256:231fd5939dbc75f69241e5659f1796e12b0945e619bf41931274b0960aa21611"},
 ]
 
 [package.dependencies]
 click = ">=8.1.0,<9"
-einops = ">=0.8.2"
-kgmodule-utils = ">=0.9.0"
-lancedb = ">=0.29.0"
-markdown-it-py = ">=3.0.0"
+kgmodule-utils = {version = ">=0.10.0", extras = ["semantic"]}
 mcp = ">=1.0.0,<2"
-numpy = ">=1.24.0"
-pandas = ">=2.0.0"
 pymupdf4llm = ">=0.0.17"
 pyyaml = ">=6.0.0"
-rich = ">=13.0.0,<15.0.0"
-sentence-transformers = ">=5.4.1"
-transformers = ">=5.5.0,<6"
+rich = ">=14.3.3,<15"
+tqdm = ">=4.60"
 
 [package.extras]
-all = ["detect-secrets (>=1.5.0)", "pdoc (>=14.0.0)", "pre-commit (>=4.5.1)", "pytest (>=8.0.0)", "pytest-cov (>=5.0.0)", "pyvis (>=0.3.2)", "ruff (>=0.4.0)", "scikit-learn (>=1.3.0)", "streamlit (>=1.35.0)", "ty (>=0.0.41)"]
-analysis = ["scikit-learn (>=1.3.0)"]
+all = ["detect-secrets (>=1.5.0)", "joblib (>=1.4.0)", "pdoc (>=14.0.0)", "pre-commit (>=4.5.1)", "pytest (>=8.0.0)", "pytest-cov (>=5.0.0)", "pyvis (>=0.3.2)", "ruff (>=0.4.0)", "scikit-learn (>=1.3.0)", "streamlit (>=1.35.0)", "ty (>=0.0.41)"]
+analysis = ["joblib (>=1.4.0)", "scikit-learn (>=1.3.0)"]
 dev = ["detect-secrets (>=1.5.0)", "pdoc (>=14.0.0)", "pre-commit (>=4.5.1)", "pytest (>=8.0.0)", "pytest-cov (>=5.0.0)", "ruff (>=0.4.0)", "ty (>=0.0.41)"]
-sqlite-vec = ["sqlite-vec (==0.1.9)"]
+lancedb = ["lancedb (>=0.29.0)"]
 viz = ["pyvis (>=0.3.2)", "streamlit (>=1.35.0)"]
 
 [[package]]
@@ -944,19 +923,6 @@ files = [
 dev = ["pre-commit (>=2.16.0) ; python_version >= \"3.9\"", "pydoctor (>=25.4.0)", "pytest"]
 docs = ["pydoctor (>=25.4.0)"]
 test = ["pytest"]
-
-[[package]]
-name = "einops"
-version = "0.8.2"
-description = "A new flavour of deep learning operations"
-optional = true
-python-versions = ">=3.9"
-groups = ["main"]
-markers = "extra == \"kgdeps\""
-files = [
-    {file = "einops-0.8.2-py3-none-any.whl", hash = "sha256:54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193"},
-    {file = "einops-0.8.2.tar.gz", hash = "sha256:609da665570e5e265e27283aab09e7f279ade90c4f01bcfca111f3d3e13f2827"},
-]
 
 [[package]]
 name = "executing"
@@ -1579,27 +1545,27 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "kgmodule-utils"
-version = "0.9.0"
+version = "0.10.0"
 description = "Shared types, graph store, semantic index, and pipeline base for the KGModule SDK"
 optional = false
 python-versions = "<3.14,>=3.12"
 groups = ["main"]
 files = [
-    {file = "kgmodule_utils-0.9.0-py3-none-any.whl", hash = "sha256:7f32869af0a8b6028314b84d3c00415ea85f0b66dc3207d8cad17e231cdcadf5"},
-    {file = "kgmodule_utils-0.9.0.tar.gz", hash = "sha256:7fa21007dd70ff0f019863ea6536c957c2973d47448aa07e4c459f6cc9c187c1"},
+    {file = "kgmodule_utils-0.10.0-py3-none-any.whl", hash = "sha256:765279f44cf754cf9256ddeab0eee4bb462f1028af3417eb321f7ef3ad1aa8a0"},
+    {file = "kgmodule_utils-0.10.0.tar.gz", hash = "sha256:b06a36c4674d2c308a776c6246f0519d99804fbd32e1901cd02fa240449baf24"},
 ]
 
 [package.dependencies]
-lancedb = {version = ">=0.19.0", optional = true, markers = "extra == \"semantic\""}
 numpy = {version = ">=1.24.0", optional = true, markers = "extra == \"semantic\""}
-rich = {version = ">=13.0.0", optional = true, markers = "extra == \"semantic\""}
+rich = {version = ">=13.0.0,<15.0.0", optional = true, markers = "extra == \"semantic\""}
 sentence-transformers = {version = ">=5.4.1", optional = true, markers = "extra == \"semantic\""}
 sqlite-vec = {version = "0.1.9", optional = true, markers = "extra == \"semantic\" or extra == \"sqlite-vec\""}
 torch = {version = ">=2.5.1", optional = true, markers = "extra == \"semantic\""}
 transformers = {version = ">=5.5.0,<6", optional = true, markers = "extra == \"semantic\""}
 
 [package.extras]
-semantic = ["lancedb (>=0.19.0)", "numpy (>=1.24.0)", "rich (>=13.0.0)", "sentence-transformers (>=5.4.1)", "sqlite-vec (==0.1.9)", "torch (>=2.5.1)", "transformers (>=5.5.0,<6)"]
+lancedb = ["lancedb (>=0.19.0)"]
+semantic = ["numpy (>=1.24.0)", "rich (>=13.0.0,<15.0.0)", "sentence-transformers (>=5.4.1)", "sqlite-vec (==0.1.9)", "torch (>=2.5.1)", "transformers (>=5.5.0,<6)"]
 sqlite-vec = ["sqlite-vec (==0.1.9)"]
 synthesis = ["httpx (>=0.27.0)", "openai (>=1.30.0)", "pillow (>=10.0.0)"]
 synthesis-mflux = ["httpx (>=0.27.0)", "mflux (>=0.9.0)", "openai (>=1.30.0)", "pillow (>=10.0.0)"]
@@ -1732,72 +1698,6 @@ files = [
     {file = "kiwisolver-1.5.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:59cd8683f575d96df5bb48f6add94afc055012c29e28124fcae2b63661b9efb1"},
     {file = "kiwisolver-1.5.0.tar.gz", hash = "sha256:d4193f3d9dc3f6f79aaed0e5637f45d98850ebf01f7ca20e69457f3e8946b66a"},
 ]
-
-[[package]]
-name = "lance-namespace"
-version = "0.9.0"
-description = "Lance Namespace interface and plugin registry"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "lance_namespace-0.9.0-py3-none-any.whl", hash = "sha256:f785ff10927e4ce0db69986576670fedd37f8a33521e8a4630c6be22db8061b2"},
-    {file = "lance_namespace-0.9.0.tar.gz", hash = "sha256:f738b641cc615b17323baa4eb47900f184688739ee3d2ea9fe39396b9588e53d"},
-]
-
-[package.dependencies]
-lance-namespace-urllib3-client = "0.9.0"
-
-[[package]]
-name = "lance-namespace-urllib3-client"
-version = "0.9.0"
-description = "Lance Namespace Specification"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "lance_namespace_urllib3_client-0.9.0-py3-none-any.whl", hash = "sha256:be819c8cffb1e460a3a504dbf52d1ca009560a48e7202b8c4279998e4adf9fe4"},
-    {file = "lance_namespace_urllib3_client-0.9.0.tar.gz", hash = "sha256:cf796fa5307fa4dde91fe4bec2af28b90ba79191852d4394e8fe44276538e40f"},
-]
-
-[package.dependencies]
-pydantic = ">=2"
-python-dateutil = ">=2.8.2"
-typing-extensions = ">=4.7.1"
-urllib3 = ">=1.25.3,<3.0.0"
-
-[[package]]
-name = "lancedb"
-version = "0.34.0"
-description = "lancedb"
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "lancedb-0.34.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:c462f2e6f933cad659fd0179394eaab578acbc9151fe2ef41bc29b36ecca5058"},
-    {file = "lancedb-0.34.0-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:48829e88e708947d0520454ab9e4f8efa35f3e3626469eadd3a6e061b89cb223"},
-    {file = "lancedb-0.34.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:05ba8a5b58e064edfbe5be71b1abf2e411b4eaf295d1a173dcb1a55c5bfb5285"},
-    {file = "lancedb-0.34.0-cp39-abi3-win_amd64.whl", hash = "sha256:51cbc11808f9e3332819b9367c975b3a888541447a8e7bea09c57c852a279153"},
-]
-
-[package.dependencies]
-deprecation = ">=2.1.0"
-lance-namespace = ">=0.3.2"
-numpy = ">=1.24.0"
-packaging = ">=23.0"
-pyarrow = ">=16"
-pydantic = ">=1.10"
-tqdm = ">=4.27.0"
-
-[package.extras]
-azure = ["adlfs (>=2024.2.0)"]
-clip = ["open-clip-torch", "pillow (>=12.1.1)", "torch"]
-dev = ["pre-commit (>=3.5.0)", "pyright (>=1.1.350)", "ruff (>=0.3.0)", "typing-extensions (>=4.0.0) ; python_full_version < \"3.11.0\""]
-docs = ["mkdocs", "mkdocs-jupyter", "mkdocs-material", "mkdocstrings-python"]
-embeddings = ["awscli (>=1.44.38)", "boto3 (>=1.28.57)", "botocore (>=1.31.57)", "cohere (>=4.0)", "colpali-engine (>=0.3.10)", "google-genai (>=1.0.0)", "huggingface-hub (>=0.19.0)", "ibm-watsonx-ai (>=1.1.2) ; python_full_version >= \"3.10.0\"", "instructorembedding (>=1.0.1)", "ollama (>=0.3.0)", "open-clip-torch (>=2.20.0)", "openai (>=1.6.1)", "pillow (>=12.1.1)", "requests (>=2.31.0)", "sentence-transformers (>=2.2.0)", "sentencepiece (>=0.1.99)", "torch (>=2.0.0)"]
-pylance = ["pylance (>=5.0.0b5)"]
-siglip = ["pillow (>=12.1.1)", "sentencepiece", "torch", "transformers (>=4.41.0)"]
-tests = ["aiohttp (>=3.9.0)", "boto3 (>=1.28.57)", "datafusion (>=52,<53)", "duckdb (>=0.9.0)", "pandas (>=1.4)", "polars (>=0.19,<=1.3.0)", "pyarrow-stubs (>=16.0)", "pylance (>=5.0.0b5)", "pytest (>=7.0)", "pytest-asyncio (>=0.21)", "pytest-mock (>=3.10)", "pytz (>=2023.3)", "requests (>=2.31.0)"]
 
 [[package]]
 name = "markdown"
@@ -2554,7 +2454,7 @@ description = "Powerful data structures for data analysis, time series, and stat
 optional = true
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "extra == \"kgdeps\" or extra == \"viz\""
+markers = "extra == \"viz\""
 files = [
     {file = "pandas-3.0.3-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:455f6f8139d4282188f526868dbc3c828470e88a3d9d59a891bd46a455f21b98"},
     {file = "pandas-3.0.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4e15135e2ee5df1063313e2425ceef8ac0f4ae775893815b0923651b806a5639"},
@@ -3004,9 +2904,10 @@ tests = ["pytest"]
 name = "pyarrow"
 version = "25.0.0"
 description = "Python library for Apache Arrow"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"viz\""
 files = [
     {file = "pyarrow-25.0.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:ce0ca222802087b9a8cb031a6468442cb6b67c290a45a601cac64753d34954d3"},
     {file = "pyarrow-25.0.0-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:7d6da02ffc7a3a9bda3b7ded4cc2a27ff73969ab37153f3afd46bbbc1ba4f0f7"},
@@ -3523,9 +3424,10 @@ testing = ["process-tests", "pytest-xdist", "virtualenv"]
 name = "python-dateutil"
 version = "2.9.0.post0"
 description = "Extensions to the standard Python datetime module"
-optional = false
+optional = true
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 groups = ["main"]
+markers = "extra == \"viz\" or extra == \"viz3d\""
 files = [
     {file = "python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3"},
     {file = "python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"},
@@ -4388,9 +4290,10 @@ files = [
 name = "six"
 version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
-optional = false
+optional = true
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 groups = ["main"]
+markers = "extra == \"viz\" or extra == \"viz3d\""
 files = [
     {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
     {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
@@ -5054,7 +4957,7 @@ description = "Provider of IANA time zone data"
 optional = true
 python-versions = ">=2"
 groups = ["main"]
-markers = "(sys_platform == \"win32\" or sys_platform == \"emscripten\") and (extra == \"kgdeps\" or extra == \"viz\")"
+markers = "(sys_platform == \"win32\" or sys_platform == \"emscripten\") and extra == \"viz\""
 files = [
     {file = "tzdata-2026.3-py2.py3-none-any.whl", hash = "sha256:dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931"},
     {file = "tzdata-2026.3.tar.gz", hash = "sha256:4a1518b8993086a7982523e071643f3c0e5f213e75b21318e78bcabfff9d1415"},
@@ -5064,9 +4967,10 @@ files = [
 name = "urllib3"
 version = "2.7.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"viz\" or extra == \"viz3d\" or extra == \"dev\""
 files = [
     {file = "urllib3-2.7.0-py3-none-any.whl", hash = "sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897"},
     {file = "urllib3-2.7.0.tar.gz", hash = "sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c"},
@@ -5353,4 +5257,4 @@ viz3d = ["PyQt5", "markdown", "param", "pyvista", "pyvistaqt", "trame-vtk"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "4d933db049e1fa55a531ba22fc8ba1a447588515e193a00e3f91c805e3d4bb3b"
+content-hash = "f3ba47b57de7e2ba7681cef871a3fd79bf0532d548ed493ce89a640884950ce7"
