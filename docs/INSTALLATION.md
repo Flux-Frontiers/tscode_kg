@@ -18,9 +18,6 @@ TypeScriptKG is a Python tool: it indexes TypeScript/JavaScript repositories (`.
 # Everything: tree-sitter extraction, SQLite graph, sqlite-vec index,
 # hybrid query, and the MCP server
 pip install tscode-kg
-
-# Cross-KG: also install PyCodeKG and DocKG for multi-graph setups
-pip install 'tscode-kg[kgdeps]'
 ```
 
 ---
@@ -29,9 +26,6 @@ pip install 'tscode-kg[kgdeps]'
 
 ```bash
 poetry add tscode-kg
-
-# Cross-KG extras
-poetry add "tscode-kg[kgdeps]"
 ```
 
 Or in `pyproject.toml`:
@@ -41,6 +35,16 @@ Or in `pyproject.toml`:
 tscode-kg = ">=0.1.0"
 ```
 
+> **Cross-KG tooling:** the `kgdeps` extra was removed in 0.3.0. It declared
+> `pycode-kg` and `doc-kg`, which TypeScriptKG never imports — the `pycodekg`
+> CLI indexes this repo from the outside via the pre-commit hook. Those are now
+> a Poetry group, installed only by contributors and absent from the published
+> package:
+>
+> ```bash
+> poetry install --with kg
+> ```
+
 > **TypeScriptKG developers:** Use `pip install -e ".[dev]"` (or `poetry install` with the `dev` extra) for the full dev environment. The `extras` mechanism above is for *consumers* of the package.
 
 ### Extras
@@ -48,7 +52,6 @@ tscode-kg = ">=0.1.0"
 | Extra | Contents |
 |---|---|
 | `kg` | `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, `networkx` — semantic index, hybrid query, MCP server, analysis |
-| `kgdeps` | `pycode-kg`, `doc-kg` — sibling knowledge graphs for Python codebases and document corpora |
 | `viz` | `streamlit`, `pyvis`, `plotly` — interactive graph explorer and snapshot timeline |
 | `viz3d` | `pyvista[jupyter]`, `PyQt5`, `pyvistaqt`, `param`, `markdown`, `trame-vtk` — 3-D visualizer |
 | `dev` | `ruff`, `ty`, `pylint`, `pytest`, `pytest-cov`, `pre-commit`, `detect-secrets` |

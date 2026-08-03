@@ -7,31 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- **`kgmodule-utils` floor lifted to `>=0.9.0`**; lock regenerated. The floor
-  had drifted a release behind the published version, so a fresh install could
-  resolve an older shared core than the one this package is tested against.
-
-- **`pycode-kg` is no longer declared as a dependency at all**, in either the
-  `kgdeps` or `dev` extras. TypeScriptKG never imports it — PyCodeKG indexes
-  this repo's Python source from the outside, through the `pycodekg` CLI in the
-  pre-commit hook, which needs the binary on disk and not a resolved dependency
-  edge.
-
-  Declaring it forced poetry's universal resolution to reconcile pycode-kg's
-  `transformers` pin against this project's own, and those constraints
-  deadlock: `kgmodule-utils>=0.9.0` needs `transformers>=5.5.0,<6` while
-  pycode-kg 0.20.0 caps `transformers<4.57`. The old `pycode-kg>=0.20.0,<0.21`
-  ceiling had therefore been quietly holding this repo on the pre-CVE
-  `transformers` line, the same one unpinned across the rest of the fleet weeks
-  ago. Install it into the venv by hand instead:
-  `poetry run pip install pycode-kg`. This matches what agent_kg already does.
-
-  The lock now resolves kgmodule-utils 0.9.0 and transformers 5.14.1, with
-  pycode-kg absent entirely — including transitively via doc-kg. Suite green
-  (78 passed, integration deselected).
-
 ### Added
 
 ### Changed
@@ -39,6 +14,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+
+## [0.3.0] - 2026-08-03
+
+Dependency-declaration corrections. No changes under `src/`, but the published
+metadata changes, which is why this is a minor rather than a patch.
+
+### Changed
+
+- **`kgmodule-utils` floor lifted to `>=0.9.0`**; lock regenerated. The floor
+  had drifted a release behind the published version, so a fresh install could
+  resolve an older shared core than the one this package is tested against.
+
+- **`pycode-kg` is declared again — as a Poetry group, not a dependency.**
+  TypeScriptKG never imports it; PyCodeKG indexes this repo's Python source
+  from the outside, through the `pycodekg` CLI in `.git/hooks/pre-commit`. That
+  needs the binary on disk, which is exactly what a group provides:
+
+  ```bash
+  poetry install --with kg
+  ```
+
+  This supersedes the standing "install it by hand"
+  (`poetry run pip install pycode-kg`) workaround. That workaround existed for
+  a real reason: declaring pycode-kg forced poetry to reconcile its
+  `transformers` pin against this project's own, and the constraints
+  deadlocked — `kgmodule-utils>=0.9.0` needs `transformers>=5.5.0,<6` while
+  pycode-kg 0.20.0 capped `transformers<4.57`. The old
+  `pycode-kg>=0.20.0,<0.21` ceiling had quietly held this repo on the pre-CVE
+  `transformers` line.
+
+  **That constraint no longer exists.** pycode-kg 0.21.4 does not pin
+  `transformers` at all — it inherits `kgmodule-utils[semantic]>=0.10.0`, the
+  same source this project already uses. Verified: locking with the group
+  resolves cleanly and leaves `transformers` at 5.14.1, unchanged.
+
+  A group rather than an extra because groups are locked and installable but
+  are never written into wheel metadata, so no published extra acquires a
+  sibling package.
+
+- **`doc-kg` joins the same group**, so every repo in the KG fleet exposes the
+  same `poetry install --with kg`. TypeScriptKG has no DocKG index today, so
+  the CLI is available rather than required.
+
+### Removed
+
+- **The `kgdeps` extra.** It put `doc-kg` into *published* metadata, where it
+  did not belong: nothing here imports DocKG or invokes `dockg`, and the only
+  trace of it in the repo is the literal string `".dockg"` in an exclusion list
+  in `src/tscode_kg/extractor.py`. The dependency this package actually has
+  (pycode-kg) went undeclared while one it does not have was published — the
+  two halves of the same mistake.
+
+  Nothing in the fleet referenced `tscode-kg[kgdeps]`. Contributors who used it
+  want `poetry install --with kg`.
 
 ## [0.2.0] - 2026-07-29
 

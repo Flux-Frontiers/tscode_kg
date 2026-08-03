@@ -28,7 +28,7 @@ packages = [{ include = "tscode_kg", from = "src" }]
 
 [project]
 name = "tscode-kg"
-version = "0.2.0"
+version = "0.3.0"
 description = "Knowledge graph for TypeScript/JavaScript codebases — AST extraction, hybrid semantic+structural search"
 readme = "README.md"
 license = "Elastic-2.0"
