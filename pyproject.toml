@@ -67,19 +67,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# pycode-kg is deliberately NOT declared anywhere in this file. It is never
-# imported by this package -- PyCodeKG indexes this repo's Python source from
-# the outside, via the `pycodekg` CLI in the pre-commit hook. Declaring it
-# forces poetry's universal resolution to reconcile pycode-kg's transformers
-# pin against this project's own, and those constraints deadlock:
-# kgmodule-utils >=0.9.0 needs transformers>=5.5.0,<6 while older pycode-kg
-# caps it below 4.57. That ceiling silently held this repo on the pre-CVE
-# transformers line. Install it into the venv by hand instead:
-#   poetry run pip install pycode-kg
-# Cross-KG: DocKG (docs) available from within tscode_kg
-kgdeps = [
-    "doc-kg>=0.21.0",
-]
+# pycode-kg is not an extra: it is never imported by this package, so it does
+# not belong in published metadata. It lives in [tool.poetry.group.kg] below --
+# see that block for why the old "install it by hand" workaround is retired.
 # Streamlit graph explorer + plotly timeline.
 # Version brackets follow pycode_kg's proven lockfile versions.
 viz = [
@@ -103,10 +93,6 @@ viz3d = [
 ]
 dev = [
     "detect-secrets>=1.5.0",
-    # NOTE: pycode-kg is NOT listed here even though the pre-commit hook runs
-    # `pycodekg build` against this repo. See the comment above [project.
-    # optional-dependencies]; install it by hand with
-    # `poetry run pip install pycode-kg`.
     "ty>=0.0.41",
     "pre-commit>=4.5.1",
     "pylint>=4.0.5",
@@ -114,6 +100,37 @@ dev = [
     "pytest-cov>=5.0.0",
     "ruff>=0.4.0",
 ]
+
+# ---------------------------------------------------------------------------
+# Maintainer tooling (Poetry group, not a PEP 621 extra)
+# ---------------------------------------------------------------------------
+# pycode-kg is a tool this repo *runs*, not a library it imports: PyCodeKG
+# indexes this repo's Python source from the outside, via the `pycodekg` CLI in
+# .git/hooks/pre-commit. It belongs in a Poetry group -- locked and installable,
+# but never written into the wheel, so no published extra acquires a sibling.
+#
+# doc-kg rides along for fleet uniformity: every repo's `kg` group carries the
+# same two CLIs, so `poetry install --with kg` means one thing everywhere. This
+# repo has no DocKG index today (no .mcp.json, no `dockg` invocation), so the
+# CLI is simply available rather than required -- and it is here, not in an
+# extra, precisely because nothing depends on it at runtime.
+#
+#   poetry install --with kg      # get the pycodekg CLI into .venv/bin
+#   poetry install                # default: group is optional, skipped
+#
+# This supersedes the standing "install it by hand" workaround. That note
+# described a real deadlock -- older pycode-kg capped transformers below 4.57
+# while kgmodule-utils >=0.9.0 needs >=5.5.0, which silently held this repo on
+# the pre-CVE transformers line. pycode-kg 0.21.4 no longer pins transformers at
+# all; it inherits the same kgmodule-utils[semantic] constraint this project
+# already uses, so the two no longer conflict. Verified: locking with this group
+# keeps transformers at 5.14.1.
+[tool.poetry.group.kg]
+optional = true
+
+[tool.poetry.group.kg.dependencies]
+doc-kg = ">=0.21.1"
+pycode-kg = ">=0.21.4"
 
 [project.urls]
 Homepage = "https://github.com/Flux-Frontiers/tscode_kg"
