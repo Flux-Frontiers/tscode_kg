@@ -54,7 +54,7 @@ dependencies = [
     "tree-sitter>=0.25.0",
     "tree-sitter-typescript>=0.23.2",
     "rich>=14.3.3,<15",
-    "kgmodule-utils[semantic,sqlite-vec]>=0.9.0",
+    "kgmodule-utils[semantic,sqlite-vec]>=0.10.0",
     "click>=8.1.0,<9",
     # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
     # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
@@ -78,7 +78,7 @@ dependencies = [
 #   poetry run pip install pycode-kg
 # Cross-KG: DocKG (docs) available from within tscode_kg
 kgdeps = [
-    "doc-kg>=0.18.1",
+    "doc-kg>=0.21.0",
 ]
 # Streamlit graph explorer + plotly timeline.
 # Version brackets follow pycode_kg's proven lockfile versions.
