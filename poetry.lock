@@ -5279,4 +5279,4 @@ viz3d = ["PyQt5", "markdown", "param", "pyvista", "pyvistaqt", "trame-vtk"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "7171328cd59437fbd3f1f2cc7e84d25601a6881963f450ea8c874b9e1b860afc"
+content-hash = "07f19b0db77ed0ea1b4e640fdb5a515e32cec7bf88bacbb6affe72e57532d83e"
