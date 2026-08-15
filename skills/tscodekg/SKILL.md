@@ -51,7 +51,7 @@ tscodekg build --repo . --graph-only
 tscodekg build --repo . --index-only
 
 # Rebuild from scratch
-tscodekg build --repo . --wipe
+tscodekg build --repo .
 ```
 
 Artifacts (all under `.tscodekg/`):
@@ -70,10 +70,10 @@ The knowledge graph is a snapshot of the codebase at build time. It does **not**
 
 ```bash
 # Full rebuild (recommended after any structural change)
-tscodekg build --repo . --wipe
+tscodekg build --repo .
 ```
 
-> **Why `--wipe`:** deleted or renamed nodes would otherwise remain as phantom entries in both the graph and the vector store. `--wipe` clears both stores unconditionally.
+> **Why `build` always wipes:** deleted or renamed nodes would otherwise remain as phantom entries. The vector store upserts by node ID, so a renamed symbol keeps its old entry forever. `build` clears both stores unconditionally; use `update` only when you are sure nothing was deleted or renamed. Same split as `pycodekg`.
 
 ## CLI Commands
 
@@ -82,7 +82,8 @@ Each command is available as `tscodekg <subcommand>` **or** a dedicated `tscodek
 | Subcommand / Script alias | Purpose |
 |---|---|
 | `init` / `tscodekg-init` | One-command setup: model, build, hooks, snapshot |
-| `build` / `tscodekg-build` | Build SQLite graph + sqlite-vec index (`--graph-only`, `--index-only`, `--wipe`) |
+| `build` / `tscodekg-build` | Full rebuild — wipes, then SQLite graph + sqlite-vec index (`--graph-only`, `--index-only`) |
+| `update` / `tscodekg-update` | Incremental upsert; same options as `build`, no wipe |
 | `query` / `tscodekg-query` | Hybrid semantic + structural query (`-k`, `--hop`, `--max-nodes`, `--rerank` hybrid/semantic/legacy) |
 | `pack` / `tscodekg-pack` | Source-grounded snippet packs (`--max-lines`, `--out` file.md/.json) |
 | `analyze` / `tscodekg-analyze` | Thorough 14-phase architectural analysis (`-o report.md`, `--write-centrality`) |
@@ -311,9 +312,9 @@ If you want snapshot history in git, un-ignore `.tscodekg/snapshots/` — the pr
 | `ModuleNotFoundError: No module named 'mcp'` | Install the extra: `pip install tscode-kg` |
 | `WARNING: SQLite database not found` | Run `tscodekg build --repo .` first |
 | MCP server not appearing | Use absolute paths in `.mcp.json`; restart Claude Code |
-| Empty query results | Rebuild the index: `tscodekg build --repo . --index-only --wipe` |
+| Empty query results | Rebuild the index: `tscodekg build --repo . --index-only` |
 | Pre-commit hook slow / unwanted for one commit | `TSCODEKG_SKIP_SNAPSHOT=1 git commit ...` |
-| Wrong files indexed | Set `[tool.tscodekg] include` / `exclude` in `pyproject.toml`, rebuild with `--wipe` |
+| Wrong files indexed | Set `[tool.tscodekg] include` / `exclude` in `pyproject.toml`, then `tscodekg build` (not `update`) |
 
 ## Full Reference
 

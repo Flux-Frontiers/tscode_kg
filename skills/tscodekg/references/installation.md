@@ -43,7 +43,7 @@ The `[kg]` extra pulls in `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, and `net
 | `--repo` | `.` | Repository root |
 | `--db` | `<repo>/.tscodekg/graph.sqlite` | SQLite graph path |
 | `--vectors` | `<repo>/.tscodekg/vectors.sqlite` | sqlite-vec store path |
-| `--wipe` | false | Clear existing data before building |
+| — | — | `build` always wipes; use the separate `update` command for an incremental upsert |
 | `--graph-only` | false | Build SQLite graph only; skip vector index |
 | `--index-only` | false | Build vector index only; graph must already exist |
 
@@ -269,12 +269,12 @@ sqlite3 .tscodekg/graph.sqlite "SELECT COUNT(*) FROM nodes; SELECT COUNT(*) FROM
 |---|---|---|
 | `ModuleNotFoundError: No module named 'mcp'` | Incomplete install | `pip install tscode-kg` |
 | `WARNING: SQLite database not found` | Graph not built | `tscodekg build --repo .` |
-| Empty results from `query_codebase` | Vector store stale or missing | `tscodekg build --repo . --index-only --wipe` |
+| Empty results from `query_codebase` | Vector store stale or missing | `tscodekg build --repo . --index-only` |
 | `RuntimeError: TypeScriptKG not initialised` | Server not started via CLI | Always start with `tscodekg mcp` / `tscodekg-mcp --repo ...` |
-| Snippets show wrong line numbers | Source changed since build | `tscodekg build --repo . --wipe` |
+| Snippets show wrong line numbers | Source changed since build | `tscodekg build --repo .` |
 | MCP server not in Claude Code / Kilo Code | Relative paths or wrong location | Absolute paths in `.mcp.json` (project root); restart |
 | MCP server not in GitHub Copilot | Missing `"type": "stdio"` or wrong key | Use `"servers"` key with `"type": "stdio"` in `.vscode/mcp.json`; click Trust |
 | MCP server not in Claude Desktop | Wrong binary path | `poetry env info --path` for the absolute `bin/tscodekg` |
 | Pre-commit hook fires when unwanted | Hook installed | `TSCODEKG_SKIP_SNAPSHOT=1 git commit ...` |
-| Wrong directories indexed | Includes/excludes unset | `[tool.tscodekg] include = [...]` / `exclude = [...]` in `pyproject.toml`, rebuild with `--wipe` |
+| Wrong directories indexed | Includes/excludes unset | `[tool.tscodekg] include = [...]` / `exclude = [...]` in `pyproject.toml`, then rebuild |
 | Embedding download fails in CI / air-gapped | No network to HuggingFace | `tscodekg download-model` beforehand and cache the model dir |

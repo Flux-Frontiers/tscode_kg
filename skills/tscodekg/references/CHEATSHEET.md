@@ -311,4 +311,4 @@ include = ["src"]        # only index these top-level dirs
 exclude = ["tests"]      # exclude at every depth
 ```
 
-Rebuild after changing includes/excludes: `tscodekg build --repo . --wipe`
+Rebuild after changing includes/excludes: `tscodekg build --repo .` (`build` always wipes)

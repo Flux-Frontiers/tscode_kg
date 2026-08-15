@@ -1,6 +1,6 @@
 {
   "format": "1.0",
-  "last_update": "2026-08-03T20:54:35.908507+00:00",
+  "last_update": "2026-08-15T18:03:55.283680+00:00",
   "snapshots": [
     {
       "key": "ff4aa4dd36dbec72fcdb64d5b1a418842a8d34d2",
@@ -546,6 +546,85 @@
           "nodes": 0,
           "edges": 0,
           "coverage_delta": 0.0,
+          "critical_issues_delta": 0
+        }
+      }
+    },
+    {
+      "key": "7529f4bd3e0bc96f02e5cbe7eac0a7213176506a",
+      "branch": "chore/fleet-currency",
+      "timestamp": "2026-08-15T18:03:55.283047+00:00",
+      "version": "0.23.1",
+      "file": "7529f4bd3e0bc96f02e5cbe7eac0a7213176506a.json",
+      "metrics": {
+        "db_path": ".pycodekg/graph.sqlite",
+        "total_nodes": 5120,
+        "meaningful_nodes": 283,
+        "total_edges": 4558,
+        "node_counts": {
+          "class": 22,
+          "function": 123,
+          "method": 106,
+          "module": 32,
+          "symbol": 4837
+        },
+        "edge_counts": {
+          "ATTR_ACCESS": 1642,
+          "CALLS": 1876,
+          "CONTAINS": 251,
+          "IMPORTS": 200,
+          "INHERITS": 9,
+          "RESOLVES_TO": 580
+        },
+        "module_count": 32,
+        "class_count": 22,
+        "function_count": 123,
+        "method_count": 106,
+        "docstring_coverage": 0.83,
+        "snapshot_count": 8,
+        "critical_issues": 3,
+        "complexity_median": 5,
+        "module_node_counts": {
+          "src/tscode_kg/__init__.py": 4,
+          "src/tscode_kg/__main__.py": 1,
+          "src/tscode_kg/analysis.py": 738,
+          "src/tscode_kg/app.py": 372,
+          "src/tscode_kg/bridge.py": 36,
+          "src/tscode_kg/centrality.py": 171,
+          "src/tscode_kg/cli/__init__.py": 1,
+          "src/tscode_kg/cli/cmd_analyze.py": 18,
+          "src/tscode_kg/cli/cmd_bridges.py": 12,
+          "src/tscode_kg/cli/cmd_build.py": 39,
+          "src/tscode_kg/cli/cmd_centrality.py": 71,
+          "src/tscode_kg/cli/cmd_explain.py": 15,
+          "src/tscode_kg/cli/cmd_framework_nodes.py": 16,
+          "src/tscode_kg/cli/cmd_hooks.py": 22,
+          "src/tscode_kg/cli/cmd_init.py": 65,
+          "src/tscode_kg/cli/cmd_mcp.py": 6,
+          "src/tscode_kg/cli/cmd_model.py": 14,
+          "src/tscode_kg/cli/cmd_query.py": 36,
+          "src/tscode_kg/cli/cmd_snapshot.py": 164,
+          "src/tscode_kg/cli/cmd_viz.py": 51,
+          "src/tscode_kg/cli/main.py": 20,
+          "src/tscode_kg/coderank.py": 255,
+          "src/tscode_kg/config.py": 21,
+          "src/tscode_kg/explain.py": 113,
+          "src/tscode_kg/extractor.py": 449,
+          "src/tscode_kg/framework_detector.py": 36,
+          "src/tscode_kg/kg.py": 53,
+          "src/tscode_kg/layout3d.py": 184,
+          "src/tscode_kg/mcp_server.py": 472,
+          "src/tscode_kg/snapshots.py": 7,
+          "src/tscode_kg/viz3d.py": 721,
+          "src/tscode_kg/viz3d_timeline.py": 71
+        }
+      },
+      "deltas": {
+        "vs_previous": null,
+        "vs_baseline": {
+          "nodes": 20,
+          "edges": 11,
+          "coverage_delta": 0.0009999999999998899,
           "critical_issues_delta": 0
         }
       }

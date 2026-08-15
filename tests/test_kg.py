@@ -81,3 +81,49 @@ class TestAnalyze:
         report = built_kg.analyze()
         assert "TypeScriptKG Repository Analysis" in report
         assert "Total Nodes" in report
+
+
+class TestBuildVersusUpdate:
+    """`build` wipes, `update` upserts — the distinction the two commands exist for.
+
+    A deleted source file is the case that separates them. Its nodes are
+    phantoms after an upsert: nothing in the new extraction mentions them, so
+    an upsert has no reason to touch them. Only a wipe clears them.
+    """
+
+    def _kg(self, repo: Path, tmp_path: Path) -> TypeScriptKG:
+        return TypeScriptKG(
+            repo_root=repo,
+            db_path=tmp_path / "graph.sqlite",
+            vectors_path=tmp_path / "vectors.sqlite",
+        )
+
+    def test_update_keeps_nodes_from_a_deleted_file(self, tmp_repo: Path, tmp_path: Path) -> None:
+        extra = tmp_repo / "src" / "doomed.ts"
+        extra.write_text("export class Doomed { gone(): string { return 'x'; } }\n")
+
+        kg = self._kg(tmp_repo, tmp_path)
+        kg.build(wipe=True)
+        before = kg.stats()["total_nodes"]
+
+        extra.unlink()
+        kg.build(wipe=False)
+
+        assert kg.stats()["total_nodes"] == before, (
+            "an upsert must not remove nodes for files that vanished"
+        )
+
+    def test_build_clears_nodes_from_a_deleted_file(self, tmp_repo: Path, tmp_path: Path) -> None:
+        extra = tmp_repo / "src" / "doomed.ts"
+        extra.write_text("export class Doomed { gone(): string { return 'x'; } }\n")
+
+        kg = self._kg(tmp_repo, tmp_path)
+        kg.build(wipe=True)
+        before = kg.stats()["total_nodes"]
+
+        extra.unlink()
+        kg.build(wipe=True)
+
+        assert kg.stats()["total_nodes"] < before, (
+            "a full rebuild must drop nodes for files that vanished"
+        )

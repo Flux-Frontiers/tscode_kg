@@ -555,8 +555,8 @@ include = ["src"]           # top-level dirs to index (empty = all)
 exclude = ["__tests__"]     # extra dirs to skip
 ```
 
-Rebuild after changing the configuration: `tscodekg build --repo . --wipe`.
+Rebuild after changing the configuration: `tscodekg build --repo .`.
 
 ---
 
-*Full rebuild: `tscodekg build --repo .` — pass `--wipe` to clear existing data first.*
+*Full rebuild: `tscodekg build --repo .` — `build` always wipes. Use `tscodekg update --repo .` for an incremental upsert.*

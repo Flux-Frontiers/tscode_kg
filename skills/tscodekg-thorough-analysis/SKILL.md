@@ -64,7 +64,7 @@ tscodekg analyze /path/to/repo -o analysis.md --write-centrality
 tscodekg analyze /path/to/repo --db /path/to/graph.sqlite --vectors /path/to/vectors.sqlite
 ```
 
-Prerequisite: the graph must exist (`tscodekg build --repo /path/to/repo`). If results look stale, rebuild with `--wipe` first.
+Prerequisite: the graph must exist (`tscodekg build --repo /path/to/repo`). If results look stale, re-run `build` — it always wipes first.
 
 Alternatively, from an MCP session simply call `analyze_repo()` — same analysis, returned as Markdown.
 
@@ -148,4 +148,4 @@ rank_nodes(top=25) / explain_rank(...)     → CodeRank detail
 - **Large repos** → phases degrade gracefully; missing optional data (e.g. no snapshots) is skipped with a warning, not a failure
 - **No CodeRank available** → fan-in falls back to a direct SQL scan
 - **Mixed TS/JS codebases** → both are indexed; use `[tool.tscodekg]` include/exclude to scope
-- **Tests polluting metrics** → `exclude = ["tests"]` in `[tool.tscodekg]`, rebuild with `--wipe`, re-run
+- **Tests polluting metrics** → `exclude = ["tests"]` in `[tool.tscodekg]`, rebuild, re-run
