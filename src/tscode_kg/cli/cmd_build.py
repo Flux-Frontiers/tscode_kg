@@ -148,3 +148,82 @@ def update(
         index_only=index_only,
         wipe=False,
     )
+
+
+# ---------------------------------------------------------------------------
+# Granular stages, mirroring `pycodekg build-sqlite` / `pycodekg build-index`
+# ---------------------------------------------------------------------------
+# These reach the same two halves as `build --graph-only` / `build --index-only`,
+# exposed under the names pycodekg uses so the two CLIs read alike. Unlike
+# `build`/`update` they keep `--wipe`: a stage is a lower-level tool than a
+# verb, and pycodekg's stages carry the flag too.
+#
+# One deliberate divergence: pycodekg names this option `--db` on build-sqlite
+# but `--sqlite` on build-index, an inconsistency its own skill documents as a
+# common mistake. Both spellings are accepted here, so muscle memory from
+# either CLI works and neither is a trap.
+
+
+@click.command("build-sqlite")
+@click.option("--repo", default=".", show_default=True, help="Repository root directory.")
+@click.option(
+    "--db",
+    "--sqlite",
+    "db",
+    default=None,
+    help="SQLite database path (default: <repo>/.tscodekg/graph.sqlite).",
+)
+@click.option(
+    "--wipe",
+    is_flag=True,
+    default=False,
+    help="Clear existing graph data before extracting.",
+)
+def build_sqlite(repo: str, db: str | None, wipe: bool) -> None:
+    """Extract a TypeScript/JS knowledge graph and store it in SQLite.
+
+    The graph half of `build`; skips the vector index.
+    """
+    _run(
+        repo=repo,
+        db=db,
+        vectors=None,
+        graph_only=True,
+        index_only=False,
+        wipe=wipe,
+    )
+
+
+@click.command("build-index")
+@click.option("--repo", default=".", show_default=True, help="Repository root directory.")
+@click.option(
+    "--sqlite",
+    "--db",
+    "db",
+    default=None,
+    help="Path to the existing SQLite graph (default: <repo>/.tscodekg/graph.sqlite).",
+)
+@click.option(
+    "--vectors",
+    default=None,
+    help="sqlite-vec store path (default: <repo>/.tscodekg/vectors.sqlite).",
+)
+@click.option(
+    "--wipe",
+    is_flag=True,
+    default=False,
+    help="Clear the existing vector store before indexing.",
+)
+def build_index(repo: str, db: str | None, vectors: str | None, wipe: bool) -> None:
+    """Build the sqlite-vec semantic index from an existing SQLite graph.
+
+    The index half of `build`; the graph must already exist.
+    """
+    _run(
+        repo=repo,
+        db=db,
+        vectors=vectors,
+        graph_only=False,
+        index_only=True,
+        wipe=wipe,
+    )
