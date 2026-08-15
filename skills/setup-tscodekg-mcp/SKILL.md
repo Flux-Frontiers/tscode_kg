@@ -93,12 +93,12 @@ TypeScriptKG builds the SQLite graph **and** the sqlite-vec index in one command
    ```
 2. If it exists, ask the user:
    > "A knowledge graph already exists at `$REPO_ROOT/.tscodekg/graph.sqlite`. Rebuild it from scratch (wipe), or keep the existing graph?"
-   - **Wipe**: proceed with `--wipe`
+   - **Rebuild**: just run the build — it rebuilds in full by default
    - **Keep**: skip to Step 3
 
 3. Run the build:
    ```bash
-   $RUNNER tscodekg build --repo "$REPO_ROOT" --wipe
+   $RUNNER tscodekg build --repo "$REPO_ROOT"
    ```
    (Use `--graph-only` / `--index-only` only if a single stage needs rebuilding.)
 
@@ -272,7 +272,7 @@ Suggested first query after restart:
 | `Current Python version is not allowed by the project` | Use `.venv/bin/tscodekg` directly instead of `poetry run tscodekg` |
 | `ModuleNotFoundError: No module named 'mcp'` | Install the extra: `pip install tscode-kg` |
 | `WARNING: SQLite database not found` | Run `tscodekg build --repo "$REPO_ROOT"` first |
-| Empty query results | `tscodekg build --repo "$REPO_ROOT" --index-only --wipe` |
+| Empty query results | `tscodekg build --repo "$REPO_ROOT" --index-only` |
 | Server not appearing in Claude Code | Absolute binary path in `.mcp.json`; restart Claude Code |
 | `Command not found` in VS Code MCP log | Extension host doesn't inherit shell PATH — use the absolute binary path |
 
@@ -283,7 +283,7 @@ Suggested first query after restart:
 When the target codebase changes, the graph must be rebuilt:
 
 ```bash
-$RUNNER tscodekg build --repo "$REPO_ROOT" --wipe
+$RUNNER tscodekg build --repo "$REPO_ROOT"
 ```
 
 The MCP client configs do not need to change — they point to the same file paths.

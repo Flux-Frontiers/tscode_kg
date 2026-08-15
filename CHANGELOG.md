@@ -9,11 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`tscodekg update`** — incremental upsert of the knowledge graph, mirroring
+  `pycodekg update`. Same options as `build`; it refreshes changed nodes without
+  clearing the stores.
+
 ### Changed
+
+- **`tscodekg build` now always wipes**, matching `pycodekg build`, `dockg build`
+  and `memorykg build`. The whole fleet rebuilds in full by default, because
+  leaving stale data behind is the surprising outcome rather than the safe one.
+
+- Dev tooling moved from a `dev` extra to an optional Poetry group, so it no
+  longer ships in the wheel and can no longer be pip-installed. Install it with
+  `poetry install --with dev`.
+
+- Floors raised to the current fleet releases: `kgmodule-utils >=0.13.2`
+  (skipping 0.13.1, which made `SnapshotManager.repo_root` a read-only property
+  and broke subclasses that assign it), `doc-kg >=0.21.2` and
+  `pycode-kg >=0.23.1` in the `kg` group. `ruff` gained the fleet's `<0.16` cap.
 
 ### Removed
 
+- **BREAKING — `tscodekg build --wipe` is gone.** It was an opt-in flag on a
+  build that defaulted to an incremental upsert, i.e. the inverse of every other
+  KG CLI in the fleet. Scripts passing `--wipe` should drop it; scripts relying
+  on the old *default* should call `tscodekg update` instead.
+
 ### Fixed
+
+- Documentation described commands that could not run: `--wipe` appeared at 24
+  sites across the skills and `docs/`, and `docs/INSTALLATION.md` listed `kg`
+  and `dev` as extras (`kg` is a Poetry group; `dev` no longer exists) and
+  advertised `pyvista[jupyter]` for `viz3d`, which `pyproject.toml` deliberately
+  avoids.
 
 ## [0.3.0] - 2026-08-03
 

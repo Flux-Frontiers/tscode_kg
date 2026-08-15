@@ -45,16 +45,30 @@ tscode-kg = ">=0.1.0"
 > poetry install --with kg
 > ```
 
-> **TypeScriptKG developers:** Use `pip install -e ".[dev]"` (or `poetry install` with the `dev` extra) for the full dev environment. The `extras` mechanism above is for *consumers* of the package.
+> **TypeScriptKG developers:** Use `poetry install --with dev`. Dev tooling is a
+> Poetry group, not an extra — it never ships in the wheel, so `pip install
+> ".[dev]"` has nothing to resolve. The `extras` below are for *consumers*.
 
 ### Extras
 
 | Extra | Contents |
 |---|---|
-| `kg` | `kgmodule-utils[semantic,sqlite-vec]`, `mcp`, `networkx` — semantic index, hybrid query, MCP server, analysis |
 | `viz` | `streamlit`, `pyvis`, `plotly` — interactive graph explorer and snapshot timeline |
-| `viz3d` | `pyvista[jupyter]`, `PyQt5`, `pyvistaqt`, `param`, `markdown`, `trame-vtk` — 3-D visualizer |
-| `dev` | `ruff`, `ty`, `pylint`, `pytest`, `pytest-cov`, `pre-commit`, `detect-secrets` |
+| `viz3d` | `pyvista`, `PyQt5`, `pyvistaqt`, `param`, `markdown`, `trame-vtk` — 3-D visualizer |
+
+`kgmodule-utils[semantic,sqlite-vec]`, `mcp` and `networkx` are **core**
+dependencies, not an extra — the semantic index, hybrid query and MCP server
+are always available.
+
+### Poetry groups
+
+| Group | Install | Contents |
+|---|---|---|
+| `dev` | `poetry install --with dev` | `ruff`, `ty`, `pylint`, `pytest`, `pytest-cov`, `pre-commit`, `detect-secrets` |
+| `kg` | `poetry install --with kg` | the `pycodekg` and `dockg` CLIs this repo runs |
+
+Groups are locked and installable but never written into the wheel, so no
+published extra acquires a sibling KG package.
 
 ---
 
@@ -63,10 +77,8 @@ tscode-kg = ">=0.1.0"
 ```bash
 git clone https://github.com/Flux-Frontiers/tscode_kg.git
 cd tscode_kg
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"      # core + dev tools
-pip install -e ".[kg,dev]"   # + full KG stack
+poetry install --with dev            # core + dev tools
+poetry install --with dev,kg         # + the pycodekg / dockg CLIs
 ```
 
 Run the test suite:
@@ -129,7 +141,8 @@ tscodekg init --repo /path/to/ts-repo
 ### Recommended: Build both databases at once
 
 ```bash
-tscodekg build --repo /path/to/repo [--wipe]
+tscodekg build --repo /path/to/repo      # full rebuild (wipes)
+tscodekg update --repo /path/to/repo     # incremental upsert
 ```
 
 ### Or in stages
@@ -138,10 +151,10 @@ TypeScriptKG has a single `build` command; use its flags to build one half at a 
 
 ```bash
 # 1. SQLite knowledge graph only
-tscodekg build --repo /path/to/repo --graph-only [--wipe]
+tscodekg build --repo /path/to/repo --graph-only
 
 # 2. sqlite-vec semantic index only (graph must already exist)
-tscodekg build --repo /path/to/repo --index-only [--wipe]
+tscodekg build --repo /path/to/repo --index-only
 
 # 3. Pre-download the embedding model (offline / CI)
 tscodekg-download-model
