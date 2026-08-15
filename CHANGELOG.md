@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pycodekg update`. Same options as `build`; it refreshes changed nodes without
   clearing the stores.
 
+- **`tscodekg build-sqlite` and `tscodekg build-index`** — the two build stages
+  as named commands, matching pycodekg. They reach the same halves as
+  `build --graph-only` / `build --index-only`, and unlike `build`/`update` they
+  keep `--wipe`, as pycodekg's stages do. `build-index` accepts both `--sqlite`
+  and `--db` for the graph path: pycodekg spells it `--db` on one stage and
+  `--sqlite` on the other, an inconsistency its own skill lists under common
+  mistakes, so both work here rather than either being a trap.
+
 ### Changed
 
 - **`tscodekg build` now always wipes**, matching `pycodekg build`, `dockg build`

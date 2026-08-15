@@ -19,7 +19,7 @@ import click
 
 from tscode_kg.cli.cmd_analyze import analyze
 from tscode_kg.cli.cmd_bridges import bridges
-from tscode_kg.cli.cmd_build import build, update
+from tscode_kg.cli.cmd_build import build, build_index, build_sqlite, update
 from tscode_kg.cli.cmd_centrality import centrality
 from tscode_kg.cli.cmd_explain import explain
 from tscode_kg.cli.cmd_framework_nodes import framework_nodes
@@ -41,6 +41,8 @@ def cli() -> None:
 cli.add_command(init)
 cli.add_command(build)
 cli.add_command(update)
+cli.add_command(build_sqlite)
+cli.add_command(build_index)
 cli.add_command(query)
 cli.add_command(pack)
 cli.add_command(analyze)

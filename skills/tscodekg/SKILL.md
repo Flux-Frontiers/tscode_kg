@@ -84,6 +84,8 @@ Each command is available as `tscodekg <subcommand>` **or** a dedicated `tscodek
 | `init` / `tscodekg-init` | One-command setup: model, build, hooks, snapshot |
 | `build` / `tscodekg-build` | Full rebuild — wipes, then SQLite graph + sqlite-vec index (`--graph-only`, `--index-only`) |
 | `update` / `tscodekg-update` | Incremental upsert; same options as `build`, no wipe |
+| `build-sqlite` / `tscodekg-build-sqlite` | Graph stage only (`--wipe` to clear first) |
+| `build-index` / `tscodekg-build-index` | Vector-index stage only; graph must exist (`--wipe` to clear first) |
 | `query` / `tscodekg-query` | Hybrid semantic + structural query (`-k`, `--hop`, `--max-nodes`, `--rerank` hybrid/semantic/legacy) |
 | `pack` / `tscodekg-pack` | Source-grounded snippet packs (`--max-lines`, `--out` file.md/.json) |
 | `analyze` / `tscodekg-analyze` | Thorough 14-phase architectural analysis (`-o report.md`, `--write-centrality`) |

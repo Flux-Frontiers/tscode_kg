@@ -127,3 +127,33 @@ class TestBuildVersusUpdate:
         assert kg.stats()["total_nodes"] < before, (
             "a full rebuild must drop nodes for files that vanished"
         )
+
+
+class TestGranularStages:
+    """`build-sqlite` and `build-index` are the two halves of `build`.
+
+    Running them in sequence must land in the same place as one `build`, or the
+    stage commands are a different pipeline wearing the same name.
+    """
+
+    def test_stages_match_a_single_build(self, tmp_repo: Path, tmp_path: Path) -> None:
+        whole = TypeScriptKG(
+            repo_root=tmp_repo,
+            db_path=tmp_path / "whole.sqlite",
+            vectors_path=tmp_path / "whole-vectors.sqlite",
+        )
+        whole.build(wipe=True)
+        expected = whole.stats()
+
+        staged = TypeScriptKG(
+            repo_root=tmp_repo,
+            db_path=tmp_path / "staged.sqlite",
+            vectors_path=tmp_path / "staged-vectors.sqlite",
+        )
+        staged.build_graph(wipe=True)
+        staged.build_index(wipe=True)
+        actual = staged.stats()
+
+        assert actual["total_nodes"] == expected["total_nodes"]
+        assert actual["total_edges"] == expected["total_edges"]
+        assert actual["node_counts"] == expected["node_counts"]

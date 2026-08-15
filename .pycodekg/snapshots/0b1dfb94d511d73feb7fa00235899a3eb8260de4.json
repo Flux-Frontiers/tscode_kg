@@ -1,0 +1,143 @@
+{
+  "key": "0b1dfb94d511d73feb7fa00235899a3eb8260de4",
+  "branch": "feat/build-stages",
+  "timestamp": "2026-08-15T18:26:34.440724+00:00",
+  "version": "0.23.1",
+  "metrics": {
+    "db_path": ".pycodekg/graph.sqlite",
+    "total_nodes": 5133,
+    "meaningful_nodes": 285,
+    "total_edges": 4575,
+    "node_counts": {
+      "class": 22,
+      "function": 125,
+      "method": 106,
+      "module": 32,
+      "symbol": 4848
+    },
+    "edge_counts": {
+      "ATTR_ACCESS": 1642,
+      "CALLS": 1882,
+      "CONTAINS": 253,
+      "IMPORTS": 202,
+      "INHERITS": 9,
+      "RESOLVES_TO": 587
+    },
+    "module_count": 32,
+    "class_count": 22,
+    "function_count": 125,
+    "method_count": 106,
+    "docstring_coverage": 0.8320000000000001,
+    "snapshot_count": 8,
+    "critical_issues": 3,
+    "complexity_median": 5,
+    "module_node_counts": {
+      "src/tscode_kg/__init__.py": 4,
+      "src/tscode_kg/__main__.py": 1,
+      "src/tscode_kg/analysis.py": 738,
+      "src/tscode_kg/app.py": 372,
+      "src/tscode_kg/bridge.py": 36,
+      "src/tscode_kg/centrality.py": 171,
+      "src/tscode_kg/cli/__init__.py": 1,
+      "src/tscode_kg/cli/cmd_analyze.py": 18,
+      "src/tscode_kg/cli/cmd_bridges.py": 12,
+      "src/tscode_kg/cli/cmd_build.py": 48,
+      "src/tscode_kg/cli/cmd_centrality.py": 71,
+      "src/tscode_kg/cli/cmd_explain.py": 15,
+      "src/tscode_kg/cli/cmd_framework_nodes.py": 16,
+      "src/tscode_kg/cli/cmd_hooks.py": 22,
+      "src/tscode_kg/cli/cmd_init.py": 65,
+      "src/tscode_kg/cli/cmd_mcp.py": 6,
+      "src/tscode_kg/cli/cmd_model.py": 14,
+      "src/tscode_kg/cli/cmd_query.py": 36,
+      "src/tscode_kg/cli/cmd_snapshot.py": 164,
+      "src/tscode_kg/cli/cmd_viz.py": 51,
+      "src/tscode_kg/cli/main.py": 22,
+      "src/tscode_kg/coderank.py": 255,
+      "src/tscode_kg/config.py": 21,
+      "src/tscode_kg/explain.py": 113,
+      "src/tscode_kg/extractor.py": 449,
+      "src/tscode_kg/framework_detector.py": 36,
+      "src/tscode_kg/kg.py": 53,
+      "src/tscode_kg/layout3d.py": 184,
+      "src/tscode_kg/mcp_server.py": 472,
+      "src/tscode_kg/snapshots.py": 7,
+      "src/tscode_kg/viz3d.py": 721,
+      "src/tscode_kg/viz3d_timeline.py": 71
+    }
+  },
+  "hotspots": [
+    {
+      "name": "fn:src/tscode_kg/mcp_server.py:_get_kg",
+      "callers": 17,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/tscode_kg/extractor.py:_node_text",
+      "callers": 14,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/tscode_kg/extractor.py:_make_node_id",
+      "callers": 11,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/tscode_kg/extractor.py:_end_lineno",
+      "callers": 8,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/tscode_kg/extractor.py:_extract_jsdoc",
+      "callers": 8,
+      "callees": 1,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/tscode_kg/extractor.py:_lineno",
+      "callers": 8,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/tscode_kg/coderank.py:compute_coderank",
+      "callers": 6,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/tscode_kg/cli/cmd_snapshot.py:_default_snapshots_dir",
+      "callers": 5,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/tscode_kg/cli/cmd_build.py:_run",
+      "callers": 4,
+      "callees": 3,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/tscode_kg/extractor.py:_FileWalker._collect_calls",
+      "callers": 4,
+      "callees": 2,
+      "risk_level": "low"
+    }
+  ],
+  "issues": [
+    "[WARN] 3 dead-code candidates found (`layout3d.py:LayoutNode`, `layout3d.py:LayoutEdge`, `extractor.py:_child_text`) -- no callers in code or tests; verify against downstream consumers, then remove or archive",
+    "[WARN] `viz3d.py` has 48 functions/methods/classes -- consider splitting into focused submodules",
+    "[WARN] `extractor.py` has 33 functions/methods/classes -- consider splitting into focused submodules"
+  ],
+  "vs_previous": null,
+  "vs_baseline": {
+    "nodes": 33,
+    "edges": 28,
+    "coverage_delta": 0.0030000000000000027,
+    "critical_issues_delta": 0
+  }
+}
