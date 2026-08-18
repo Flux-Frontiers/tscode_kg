@@ -58,3 +58,9 @@ dist/
 .mcp.json
 .mcp.json.sav
 # === end KG generated artifacts ===
+
+# AgentKG local store -- nothing under it is ever tracked.
+# AgentKG records local agent interactions, not project state; it is global
+# user context rather than anything this repo should publish. Every other
+# fleet repo carries this rule -- see kgrag_priv/docs/SNAPSHOT_STRATEGY.md.
+**/.agentkg/
