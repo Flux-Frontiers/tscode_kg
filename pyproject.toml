@@ -113,7 +113,6 @@ optional = true
 detect-secrets = ">=1.5.0"
 ty = ">=0.0.44"
 pre-commit = ">=4.5.1"
-pylint = ">=4.0.5"
 # >=9.0.3 is a security floor, not a preference: GHSA-6w46-j5rx-g56g.
 pytest = ">=9.0.3"
 pytest-cov = ">=5.0.0"
