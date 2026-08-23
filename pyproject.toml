@@ -64,7 +64,7 @@ dependencies = [
     "tree-sitter>=0.25.0",
     "tree-sitter-typescript>=0.23.2",
     "rich>=14.3.3,<15",
-    "kgmodule-utils[semantic,sqlite-vec]>=0.13.2",
+    "kgmodule-utils[semantic,sqlite-vec]>=0.18.0",
     "click>=8.1.0,<9",
     # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
     # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
@@ -149,7 +149,7 @@ ruff = ">=0.4.0,<0.16"
 optional = true
 
 [tool.poetry.group.kg.dependencies]
-doc-kg = ">=0.21.2"
+doc-kg = ">=0.22.0"
 pycode-kg = ">=0.23.1"
 
 [project.urls]
