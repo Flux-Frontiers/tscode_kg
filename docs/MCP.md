@@ -441,7 +441,7 @@ Show full details of a specific codebase metrics snapshot.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `key` | `str` | `"latest"` | Snapshot key — tree hash or `"latest"` for the most recent |
+| `key` | `str` | `"latest"` | Snapshot key -- a release tag, a UTC timestamp for an untagged capture, or `"latest"` for the most recent |
 
 **Returns:** JSON object with the full metrics dict (`total_nodes`, `total_edges`, `meaningful_nodes`, `docstring_coverage`, `node_counts`, `edge_counts`, `critical_issues`, `complexity_median`), top hotspots, deltas, and freshness vs. the live graph.
 
@@ -457,8 +457,8 @@ Compare two codebase metric snapshots side-by-side.
 
 | Parameter | Type | Description |
 |---|---|---|
-| `key_a` | `str` | First (older) snapshot key (tree hash) |
-| `key_b` | `str` | Second (newer) snapshot key (tree hash) |
+| `key_a` | `str` | First (older) snapshot key (a release tag or timestamp, not a tree hash) |
+| `key_b` | `str` | Second (newer) snapshot key (a release tag or timestamp, not a tree hash) |
 
 **Returns:** JSON with keys `a` (metrics for `key_a`), `b` (metrics for `key_b`), `delta` (b − a), `node_counts_delta`, and `edge_counts_delta`, plus per-snapshot freshness.
 

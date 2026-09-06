@@ -9,8 +9,14 @@ Capture, store, and compare codebase metrics over time. Track the evolution of c
 ## Overview
 
 Snapshots are point-in-time captures of your codebase's metrics, tagged with:
-- **Tree hash** — the git tree hash of the staged changeset (pre-commit mode) or commit hash (CI/manual)
-- **Commit hash** — HEAD at capture time; recorded as metadata even in pre-commit mode
+- **Key** — a release tag you pass explicitly (`0.4.0`), or a UTC timestamp when
+  you omit one. Never a git tree hash: that hash is read before `git add`
+  stages the snapshot, so it names a tree that is never committed and cannot be
+  resolved afterward.
+- **Subject** — what was measured, e.g. `repo:tscode-kg`; separate from the
+  version, which names the measuring tool.
+- **Tree hash** — recorded as provenance, not the key; auto-detected from
+  `git write-tree` when not provided.
 - **Branch name** — to distinguish release vs. develop metrics
 - **Version string** — semantic versioning (0.1.0, 1.0.0, etc.); auto-detected from the installed `tscode-kg` package when omitted
 - **Timestamp** — ISO 8601 UTC for auditability
@@ -26,10 +32,14 @@ Each snapshot includes **automatic delta computation** against the previous snap
 
 ### Capture a Snapshot
 ```bash
-tscodekg snapshot save 0.1.0
+tscodekg snapshot save 0.1.0 --subject repo:tscode-kg
 ```
 
-Automatically detects your current git commit and branch. Creates `.tscodekg/snapshots/{tree_hash}.json` with full metrics. Use `--tree-hash $(git write-tree)` in pre-commit context to key by staged tree.
+Automatically detects your current git commit and branch. Creates
+`.tscodekg/snapshots/0.1.0.json`, keyed on the `VERSION` you pass. Omit
+`VERSION` and the key is a UTC timestamp instead — the right answer for the
+per-commit hook below, which has no release tag to give it. `--tree-hash` is
+still accepted and still auto-detected, but only as provenance.
 
 ### List All Snapshots
 ```bash
@@ -38,20 +48,20 @@ tscodekg snapshot list
 
 Shows all snapshots in reverse chronological order:
 ```
-Commit     Branch       Version    Nodes  Edges  Coverage
-3487ed5    develop      0.1.1      1240   2380   62.0%
-660e4f0    main         0.1.0      1240   2380   62.0%
-9f7918d    develop      0.1.0-dev  1180   2270   58.2%
+Key          Timestamp            Branch       Version   Nodes  Edges  Coverage
+0.1.1        2026-07-07 17:25     develop      0.1.1     1240   2380   62.0%
+0.1.0        2026-07-05 09:10     main         0.1.0     1240   2380   62.0%
+0.1.0-dev1   2026-07-01 14:02     develop      0.1.0-dev 1180   2270   58.2%
 ```
 
 ### Show Snapshot Details
 ```bash
-tscodekg snapshot show 3487ed5
+tscodekg snapshot show 0.1.1
 ```
 
 Displays full metrics, hotspots, and deltas:
 ```
-Commit:    3487ed5
+Key:       0.1.1
 Branch:    develop
 Timestamp: 2026-07-07T17:25:29Z
 Version:   0.1.1
@@ -71,12 +81,12 @@ Delta vs. Previous:
 
 ### Compare Two Snapshots
 ```bash
-tscodekg snapshot diff 660e4f0 3487ed5
+tscodekg snapshot diff 0.1.0 0.1.1
 ```
 
 Side-by-side comparison showing what changed:
 ```
-Comparing 660e4f0 vs 3487ed5
+Comparing 0.1.0 vs 0.1.1
 
 Metric                   A             B             Δ
 total_nodes              1180          1240          +60
@@ -101,10 +111,10 @@ tscodekg snapshot prune             # remove them
 ├── graph.sqlite          # Knowledge graph database
 ├── vectors.sqlite        # sqlite-vec semantic embeddings
 └── snapshots/
-    ├── manifest.json     # Index of all snapshots
-    ├── 3487ed5.json      # Snapshot keyed by tree hash
-    ├── 660e4f0.json
-    └── 9f7918d.json
+    ├── manifest.json      # Index of all snapshots
+    ├── 0.1.0.json         # Snapshot keyed on the release tag
+    ├── 0.1.1.json
+    └── 2026-09-06T....json  # A corpus/hook capture with no tag: UTC timestamp
 ```
 
 ### Manifest Index
@@ -114,13 +124,14 @@ tscodekg snapshot prune             # remove them
   "last_update": "2026-07-07T17:25:29Z",
   "snapshots": [
     {
-      "key": "a1b2c3d4e5f6...",
-      "commit": "3487ed5",
-      "tree_hash": "a1b2c3d4e5f6...",
+      "key": "0.1.1",
+      "subject": "repo:tscode-kg",
+      "tool": "tscode-kg",
+      "tool_version": "0.4.0",
       "branch": "develop",
       "timestamp": "2026-07-07T17:25:29Z",
       "version": "0.1.1",
-      "file": "a1b2c3d4e5f6....json",
+      "file": "0.1.1.json",
       "metrics": {
         "nodes": 1240,
         "edges": 2380,
@@ -178,7 +189,7 @@ tscodekg snapshot save 0.1.1
 tscodekg snapshot save 0.1.2
 
 # Compare releases
-tscodekg snapshot diff <v0.1.1-key> <v0.1.2-key>
+tscodekg snapshot diff 0.1.1 0.1.2
 ```
 
 ### Feature Branch Tracking
@@ -193,8 +204,8 @@ tscodekg snapshot save 0.1.2-dev1
 tscodekg build --repo .
 tscodekg snapshot save 0.1.2-dev2
 
-# See improvement
-tscodekg snapshot diff <dev1-key> <dev2-key>
+# See improvement -- the key is the tag you passed, not a hash to look up
+tscodekg snapshot diff 0.1.2-dev1 0.1.2-dev2
 ```
 
 ### Regression Detection
@@ -206,23 +217,27 @@ tscodekg build --repo .
 tscodekg snapshot save 0.1.1-week5
 
 # Compare to last week
-tscodekg snapshot diff <prev-week-key> <current-week-key>
+tscodekg snapshot diff 0.1.1-week4 0.1.1-week5
 
 # Alert if critical_issues increased or coverage dropped
 ```
 
 ### Automatic Capture via Git Hook (Recommended)
 
-Install the pre-commit hook once and snapshots are captured automatically before every commit — keyed by the staged tree hash and committed atomically with the changeset:
+Install the pre-commit hook once and snapshots are captured automatically before every commit, keyed on a UTC timestamp since a commit has no release tag, and committed atomically with the changeset:
 
 ```bash
 tscodekg install-hooks
 ```
 
 Before each `git commit`, the hook:
-1. Calls `git write-tree` to get the stable tree hash of the staged changeset
+1. Calls `git write-tree` to record the staged tree hash as provenance -- not
+   the key, since staging the snapshot file afterward changes the index the
+   hash was read from, so it names a tree that is never actually committed
 2. Rebuilds the local index so it matches the staged content
-3. Saves `.tscodekg/snapshots/{tree_hash}.json` with full metrics (version auto-detected from the installed package)
+3. Saves `.tscodekg/snapshots/{timestamp}.json` with full metrics (version
+   auto-detected from the installed package; no `VERSION` is passed, so the
+   key is a UTC timestamp)
 4. Stages the snapshot file (`git add .tscodekg/snapshots/`) so it ships inside the commit
 5. Runs the pre-commit framework checks (`pre-commit run`) after the snapshot is staged
 
@@ -247,9 +262,9 @@ tscodekg build --repo .
 
 # Capture snapshot
 VERSION=$(git describe --tags --always)
-tscodekg snapshot save $VERSION
+tscodekg snapshot save $VERSION --subject repo:tscode-kg
 
-# Compare to previous
+# Compare to previous -- the key is the tag itself, no lookup needed
 PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1)
 tscodekg snapshot diff $PREV_TAG $VERSION > metrics_comparison.txt
 ```
@@ -266,7 +281,7 @@ from tscode_kg.snapshots import SnapshotManager
 # Initialize manager (db_path enables per-module node counts)
 mgr = SnapshotManager(".tscodekg/snapshots", db_path=".tscodekg/graph.sqlite")
 
-# Capture snapshot (pre-commit mode: pass tree_hash from `git write-tree`)
+# Capture a release snapshot: key is the tag, subject is what was measured
 snapshot = mgr.capture(
     version="0.1.1",             # auto-detected from tscode-kg package if None
     branch="develop",            # auto-detected if None
@@ -275,17 +290,19 @@ snapshot = mgr.capture(
     complexity_median=4.2,
     hotspots=[...],
     issues=[...],
-    tree_hash="a1b2c3d4e5f6...", # optional; used as file key when set
+    key="0.1.1",                 # release tag; omit for a UTC timestamp key
+    subject="repo:tscode-kg",    # what was measured, not what measured it
+    tree_hash="a1b2c3d4e5f6...", # provenance only -- auto-detected, never the key
 )
 mgr.save_snapshot(snapshot)
 
-# Load and inspect (pass tree_hash or commit hash as key)
+# Load and inspect by key
 manifest = mgr.load_manifest()
 snapshots = mgr.list_snapshots(limit=10)
-loaded = mgr.load_snapshot("a1b2c3d4e5f6...")
+loaded = mgr.load_snapshot("0.1.1")
 
-# Compare (pass tree hashes or commit hashes)
-diff = mgr.diff_snapshots("660e4f0tree...", "a1b2c3d4e5f6...")
+# Compare by key
+diff = mgr.diff_snapshots("0.1.0", "0.1.1")
 ```
 
 ### JSON Output
@@ -360,7 +377,7 @@ Monitor trends to detect:
 
 1. **Install the git hook**
    - Run `tscodekg install-hooks` once per repo
-   - Snapshots are captured before every commit, keyed by tree hash, and staged atomically
+   - Snapshots are captured before every commit, keyed on a UTC timestamp, and staged atomically
    - `.tscodekg/snapshots/` is tracked in git — snapshots ship with the commit that produced them
 
 2. **Capture at milestones**
@@ -374,8 +391,8 @@ Monitor trends to detect:
    - Easier to track release impact
 
 4. **Include context**
+   - Pass `--subject` to name what was measured, e.g. `repo:tscode-kg`
    - Use branch names to distinguish develop/main
-   - Tag with what changed if committing snapshots
    - Link to issues/PRs for traceability
 
 5. **Automate in CI**
@@ -400,6 +417,9 @@ A: Yes — `.tscodekg/snapshots/` is tracked in git (only the SQLite artifacts a
 
 **Q: What if I miss a snapshot?**
 A: You can manually create one anytime with `tscodekg snapshot save`. Delta comparison still works as long as timestamps are preserved.
+
+**Q: My existing snapshots are keyed by a tree hash from before this scheme changed -- are they still readable?**
+A: Yes. `load_snapshot` and the manifest loader both dual-read the legacy shape, so old tree-hash-keyed files stay addressable by the key they were stored under. New captures use the tag/timestamp scheme going forward; nothing rewrites history.
 
 **Q: How do I integrate with dashboards?**
 A: Use `--json` output (`snapshot list --json`, `snapshot diff --json`) and feed to Grafana, Datadog, or custom tools. The structure is designed for programmatic ingestion.
