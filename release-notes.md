@@ -1,68 +1,62 @@
-# Release Notes — v0.3.0
+# Release Notes — v0.4.0
 
-> Released: 2026-08-03
+> Released: 2026-09-06
 
-Nothing under `src/` changed. What changed is what this package *claims* about
-its sibling knowledge graphs — and it had the two halves exactly backwards.
+Snapshots saved by this package were never actually retrievable. This release
+fixes the root cause, adds two new build commands that bring the CLI in line
+with the rest of the fleet, and removes a flag whose default direction was
+backwards.
 
-## The dependency it has was undeclared; the one it doesn't have was published
+## What changed
 
-`.git/hooks/pre-commit` runs `pycodekg build` against this repo on every commit.
-`pycode-kg` was declared nowhere. In its place, `pyproject.toml` carried a
-standing workaround:
+**Snapshots were keyed on a hash that never matched anything committed.**
+`snapshot save VERSION` accepted a version tag but silently threw it away:
+`Snapshot.key` fell back to the git tree hash, and that hash was read before
+`git add` staged the snapshot file, so it named a tree that was never actually
+committed. A snapshot saved this way could not be looked up again by tag, by
+timestamp, or by any value a caller could reasonably guess. `snapshot save`
+now passes the version through as the key and takes a new `--subject` option
+naming what was measured (for example `repo:tscode-kg`), separate from the
+tool that measured it. The pre-commit hook needed no changes: it has never
+passed a version, so its automatic captures now key correctly on a UTC
+timestamp instead of an unresolvable hash. Snapshots saved under the old
+scheme stay readable under the key they were stored with. `docs/SNAPSHOTS.md`,
+`docs/CHEATSHEET.md`, `docs/MCP.md`, and this repo's `README.md` described the
+broken scheme as the intended design and are corrected to match.
 
-```bash
-poetry run pip install pycode-kg     # the old advice
-```
+**`tscodekg build` now always wipes**, matching `pycodekg build`, `dockg
+build`, and `memorykg build` elsewhere in the fleet. The old default was an
+incremental upsert, the one CLI in the fleet where a plain `build` left stale
+data behind instead of starting clean. The opt-in `--wipe` flag this replaces
+is gone; a new `tscodekg update` command carries the incremental behavior for
+anyone who relied on it, and `build-sqlite` / `build-index` expose the two
+build stages as named commands for anyone who was using `build --graph-only`
+or `build --index-only`.
 
-Meanwhile a published `kgdeps` extra declared `doc-kg` — which TypeScriptKG
-never imports and never invokes. The only trace of DocKG anywhere in the repo
-is the literal string `".dockg"` in an exclusion list.
+**Dependency floors moved up to the packages this project is tested
+against**: `kgmodule-utils` to `0.19.1`, `doc-kg` to `0.24.1`, and `pycode-kg`
+to `0.26.0`. The `kgmodule-utils` floor had sat at `0.18.0` since this
+project's first release, several versions behind the shared snapshot fix
+above required to land.
 
-So consumers of `tscode-kg[kgdeps]` were installing a package this project has
-no relationship with, while contributors had to know an undocumented manual step
-to make the commit hook work.
+**Dev tooling moved from a `dev` extra to an optional Poetry group.** It no
+longer ships in the wheel and can no longer be installed with `pip`. Use
+`poetry install --with dev` instead.
 
-## Why the workaround existed, and why it's gone
-
-The manual-install advice was not arbitrary. Declaring `pycode-kg` used to force
-Poetry to reconcile its `transformers` pin against this project's own, and the
-constraints genuinely deadlocked: `kgmodule-utils>=0.9.0` needs
-`transformers>=5.5.0,<6`, while pycode-kg 0.20.0 capped `transformers<4.57`. The
-old `pycode-kg>=0.20.0,<0.21` ceiling had been quietly holding this repo on the
-**pre-CVE `transformers` line**.
-
-That constraint no longer exists. pycode-kg 0.21.4 doesn't pin `transformers` at
-all — it inherits `kgmodule-utils[semantic]>=0.10.0`, the same source this
-project already uses. This was verified rather than assumed: locking with the
-new group resolves cleanly and leaves `transformers` at **5.14.1, unchanged**.
-
-## What replaces both
-
-A Poetry group. Groups are locked and installable, but are never written into
-wheel metadata — so contributors get the CLIs and consumers get nothing extra:
-
-```bash
-poetry install --with kg      # dockg + pycodekg CLIs into .venv/bin
-poetry install                # default — group is optional, skipped
-```
-
-`doc-kg` rides along so that `poetry install --with kg` means the same thing in
-every repo across the KG fleet. TypeScriptKG has no DocKG index today, so the
-CLI is simply available rather than required — and it lives in the group, not an
-extra, precisely because nothing depends on it at runtime.
+A separate documentation pass corrected 24 sites referencing the removed
+`--wipe` flag and fixed `docs/INSTALLATION.md`, which listed `kg` and `dev` as
+installable extras (`kg` is a Poetry group; `dev` no longer exists as either)
+and recommended a PyVista Jupyter extra this project deliberately avoids.
 
 ## Upgrading
 
-If you install `tscode-kg`, `tscode-kg[kg]`, `tscode-kg[viz]` or
-`tscode-kg[viz3d]`, nothing changes.
+Scripts that pass `tscodekg build --wipe` should drop the flag; `build` wipes
+by default now. Scripts that relied on the old incremental default should
+call `tscodekg update` instead. Bump the `kgmodule-utils`, `doc-kg`, and
+`pycode-kg` floors in any environment that pins them below the versions
+above, and reinstall dev tooling with `poetry install --with dev` if it was
+installed via the old extra.
 
-If you were installing **`tscode-kg[kgdeps]`**, that extra no longer exists. You
-almost certainly wanted the contributor setup: clone the repo and run
-`poetry install --with kg`. Nothing in the fleet referenced it.
+---
 
-If you are a contributor who followed the old `poetry run pip install pycode-kg`
-advice, you can stop — `poetry install --with kg` now does it, and pins a
-version.
-
-See [CHANGELOG.md](CHANGELOG.md) for the itemised list.
+_Full changelog: [CHANGELOG.md](CHANGELOG.md)_
