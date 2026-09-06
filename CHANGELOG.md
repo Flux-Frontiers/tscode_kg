@@ -31,10 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer ships in the wheel and can no longer be pip-installed. Install it with
   `poetry install --with dev`.
 
-- Floors raised to the current fleet releases: `kgmodule-utils >=0.13.2`
-  (skipping 0.13.1, which made `SnapshotManager.repo_root` a read-only property
-  and broke subclasses that assign it), `doc-kg >=0.21.2` and
-  `pycode-kg >=0.23.1` in the `kg` group. `ruff` gained the fleet's `<0.16` cap.
+- Floors raised to the current fleet releases: `kgmodule-utils >=0.19.1`,
+  `doc-kg >=0.24.1` and `pycode-kg >=0.26.0` in the `kg` group. `ruff` gained
+  the fleet's `<0.16` cap. The `kgmodule-utils` floor had stopped at `0.18.0`
+  since this project's first release -- see the `### Fixed` entry below.
 
 ### Removed
 
@@ -44,6 +44,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the old *default* should call `tscodekg update` instead.
 
 ### Fixed
+
+- **Snapshots were keyed on a git tree hash, unresolvable from the moment
+  they were written.** The `kgmodule-utils` floor read `>=0.18.0`, from
+  before the fleet's key-scheme change existed, so `snapshot save VERSION`
+  accepted the tag and silently ignored it: `Snapshot.key` fell back to
+  `tree_hash`, which is read before `git add` stages the snapshot and so
+  names a tree that is never committed. Confirmed live before fixing it --
+  `tscodekg snapshot save 1.0.0` against a scratch repo produced a
+  40-character hex filename, not `1.0.0.json`.
+
+  `snapshot save` now passes `key=`/`subject=` through to the shared
+  manager, and takes a new `--subject` option (what was measured, e.g.
+  `repo:tscode-kg`, separate from the version, which names the measuring
+  tool). The pre-commit hook needed no template change: it never passed a
+  `VERSION`, so its captures now correctly key on a UTC timestamp instead
+  of an unresolvable hash, automatically. Existing tree-hash-keyed
+  snapshots stay addressable by the key they were stored under -- the
+  manifest loader dual-reads both shapes.
+
+  `docs/SNAPSHOTS.md`, `docs/CHEATSHEET.md`, `docs/MCP.md` and this
+  repo's `README.md` described the tree-hash scheme as the design, not a
+  bug, and are corrected to match.
 
 - Documentation described commands that could not run: `--wipe` appeared at 24
   sites across the skills and `docs/`, and `docs/INSTALLATION.md` listed `kg`

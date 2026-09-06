@@ -8,15 +8,19 @@ those types and adds a ``SnapshotManager`` subclass that defaults
 ``package_name`` to ``"tscode-kg"`` so version auto-detection resolves to this
 package.
 
-Snapshots are stored in ``.tscodekg/snapshots/{tree_hash}.json`` with a
-``manifest.json`` tracking all snapshots and their metrics — the same layout
-PyCodeKG uses under ``.pycodekg/snapshots/``.
+Snapshots are keyed on a caller-supplied release tag or, absent one, a UTC
+timestamp -- never a git tree hash, which is read before ``git add`` stages
+the snapshot and so names a tree that is never committed. Stored in
+``.tscodekg/snapshots/{key}.json`` with a ``manifest.json`` tracking all
+snapshots and their metrics — the same layout PyCodeKG uses under
+``.pycodekg/snapshots/``.
 
 Usage
 -----
 >>> from tscode_kg.snapshots import SnapshotManager
 >>> mgr = SnapshotManager(".tscodekg/snapshots")
->>> snapshot = mgr.capture(version="0.1.0", branch="develop", graph_stats_dict=stats)
+>>> snapshot = mgr.capture(version="0.4.0", branch="main", key="0.4.0",
+...                         subject="repo:tscode-kg", graph_stats_dict=stats)
 >>> mgr.save_snapshot(snapshot)
 >>> manifest = mgr.load_manifest()
 

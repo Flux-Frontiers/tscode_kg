@@ -398,8 +398,10 @@ Track how the codebase evolves across commits — node/edge growth, coverage tre
 snapshot_list()
 ```
 
-Returns the 10 most recent snapshots (newest first), each with tree hash key, branch, timestamp, version,
-key metrics, deltas vs. the previous snapshot, and freshness vs. the live graph.
+Returns the 10 most recent snapshots (newest first), each with its key (a
+release tag, or a UTC timestamp for an untagged capture), branch, timestamp,
+version, key metrics, deltas vs. the previous snapshot, and freshness vs. the
+live graph.
 
 ```python
 snapshot_list(limit=0)              # return all snapshots
@@ -410,7 +412,7 @@ snapshot_list(branch="main")        # filter to a specific branch
 
 ```python
 snapshot_show()                    # most recent (default: "latest")
-snapshot_show("abc1234")           # specific key: tree hash
+snapshot_show("0.4.0")             # specific key: the release tag it was saved under
 ```
 
 Returns full metrics (nodes, edges, JSDoc coverage, critical issues, complexity median),
@@ -419,7 +421,7 @@ top hotspots, and deltas vs. both the previous and baseline snapshots.
 ### Compare two snapshots
 
 ```python
-snapshot_diff("abc1234", "def5678")   # tree hashes from snapshot_list()
+snapshot_diff("0.3.0", "0.4.0")        # keys from snapshot_list()
 ```
 
 Returns metrics for both snapshots and a computed delta (b − a) covering: total nodes, total edges,

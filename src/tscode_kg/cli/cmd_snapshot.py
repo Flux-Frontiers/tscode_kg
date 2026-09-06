@@ -62,7 +62,13 @@ def _default_snapshots_dir(snapshots_dir: str | None, repo_root: Path | None = N
     "--tree-hash",
     default="",
     type=str,
-    help="Git tree hash; auto-detected if not provided.",
+    help="Git tree hash, recorded as provenance; auto-detected if not provided.",
+)
+@click.option(
+    "--subject",
+    default="",
+    type=str,
+    help="What was measured, e.g. 'repo:tscode-kg'.",
 )
 def save_snapshot(
     version: str | None,
@@ -71,20 +77,23 @@ def save_snapshot(
     snapshots_dir: str | None,
     branch: str | None,
     tree_hash: str,
+    subject: str,
 ) -> None:
     """
     Capture current TypeScriptKG metrics and save as a temporal snapshot.
 
     Reads graph statistics and JSDoc coverage from the SQLite graph, runs the
-    analyzer for issue counts and hotspots, then saves a snapshot tagged with
-    the given VERSION.  The tree hash is auto-detected from git when not
-    provided.
+    analyzer for issue counts and hotspots, then saves a snapshot keyed on
+    VERSION. Omit VERSION and the snapshot is keyed on a UTC timestamp, which
+    is the right answer for a corpus with no release tag. The tree hash is
+    recorded as provenance and auto-detected from git when not provided; it
+    is not the key.
 
-    Snapshots are stored in .tscodekg/snapshots/{tree_hash}.json, with a
+    Snapshots are stored in .tscodekg/snapshots/{key}.json, with a
     manifest.json tracking all snapshots and their metrics.
 
     Example:
-        tscodekg snapshot save 0.1.0 --repo .
+        tscodekg snapshot save 0.1.0 --repo . --subject repo:tscode-kg
     """
     capture_snapshot(
         version=version,
@@ -93,6 +102,7 @@ def save_snapshot(
         snapshots_dir=snapshots_dir,
         branch=branch,
         tree_hash=tree_hash,
+        subject=subject,
     )
 
 
@@ -104,15 +114,22 @@ def capture_snapshot(
     snapshots_dir: str | None,
     branch: str | None,
     tree_hash: str,
+    subject: str = "",
 ) -> None:
     """Capture and persist a snapshot; shared by ``snapshot save`` and ``init``.
 
-    :param version: Version tag; auto-detected from the package when falsy.
+    :param version: Release tag, becoming the snapshot's key; auto-detected
+        from the installed package when falsy, which then yields a UTC
+        timestamp key instead -- the right answer for a corpus, not a repo
+        release. Never used as the key without being explicitly passed here.
     :param repo: Repository root path.
     :param db: SQLite graph path; defaults to ``<repo>/.tscodekg/graph.sqlite``.
     :param snapshots_dir: Snapshots directory; defaults to ``<repo>/.tscodekg/snapshots``.
     :param branch: Branch name; auto-detected when ``None``.
-    :param tree_hash: Git tree hash; auto-detected when empty.
+    :param tree_hash: Git tree hash, recorded as provenance; auto-detected
+        when empty. It is not the snapshot's key.
+    :param subject: What was measured, e.g. ``repo:tscode-kg``. Recorded
+        separately from ``version``, which names the measuring tool.
     """
     from tscode_kg.kg import TypeScriptKG  # pylint: disable=import-outside-toplevel
     from tscode_kg.snapshots import SnapshotManager  # pylint: disable=import-outside-toplevel
@@ -171,6 +188,10 @@ def capture_snapshot(
         hotspots=hotspots,
         issues=issue_strings,
         tree_hash=tree_hash,
+        # An explicit VERSION is a release tag and becomes the key. An
+        # auto-detected one is the measuring tool's version and must not be.
+        key=version or "",
+        subject=subject,
     )
 
     snapshot_file = snap_mgr.save_snapshot(snapshot_obj)

@@ -61,7 +61,7 @@ tscodekg framework-nodes --top 20
 tscodekg explain "fn:src/utils/helpers.ts:formatDate"
 
 # Temporal metric snapshots
-tscodekg snapshot save --repo /path/to/ts-repo
+tscodekg snapshot save 0.4.0 --repo /path/to/ts-repo --subject repo:tscode-kg
 tscodekg snapshot list
 
 # Interactive visualizers (install extras: tscode-kg[viz] / tscode-kg[viz3d])
@@ -95,9 +95,12 @@ Repo-local Claude Code skills live in `skills/`.
 
 ## Snapshots & git hook
 
-`tscodekg snapshot save` captures graph metrics (nodes, edges, JSDoc coverage,
-issues, hotspots) keyed by git tree hash into `.tscodekg/snapshots/`, with
-deltas computed against the previous and baseline snapshots.
+`tscodekg snapshot save [VERSION]` captures graph metrics (nodes, edges,
+JSDoc coverage, issues, hotspots) into `.tscodekg/snapshots/`, keyed on
+VERSION -- pass a release tag at release time, or omit it for a UTC
+timestamp key, which is what the per-commit hook below uses. The git tree
+hash is recorded as provenance, not the key. Deltas are computed against
+the previous and baseline snapshots.
 `tscodekg install-hooks` installs a pre-commit hook that rebuilds the index,
 captures a snapshot, stages the snapshot directory, and then runs the
 pre-commit framework checks — so every commit records the state of the
