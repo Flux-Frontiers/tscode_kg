@@ -75,6 +75,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   advertised `pyvista[jupyter]` for `viz3d`, which `pyproject.toml` deliberately
   avoids.
 
+- **`release.yml` had no PyPI publish job.** The `0.2.0` and `0.3.0` releases
+  reached PyPI through a manual `poetry publish`, not CI -- the workflow only
+  ever created the GitHub Release. A `publish` job using PyPI Trusted
+  Publishing now follows the release job, matching every other package in the
+  fleet.
+
+- **`README.md` had no badges and no citation metadata**, unlike every other
+  released package in the fleet. Added the standard badge row (Python,
+  license, PyPI, version, CI, Poetry, DOI) and a `## Citation` section
+  pointing at `CITATION.cff`.
+
 ## [0.3.0] - 2026-08-03
 
 Dependency-declaration corrections. No changes under `src/`, but the published

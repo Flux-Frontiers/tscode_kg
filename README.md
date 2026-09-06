@@ -1,5 +1,13 @@
 # TypeScriptKG
 
+[![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
+[![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
+[![PyPI](https://img.shields.io/pypi/v/tscode-kg.svg)](https://pypi.org/project/tscode-kg/)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/Flux-Frontiers/tscode_kg/releases)
+[![CI](https://github.com/Flux-Frontiers/tscode_kg/actions/workflows/ci.yml/badge.svg)](https://github.com/Flux-Frontiers/tscode_kg/actions/workflows/ci.yml)
+[![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
+[![DOI](https://zenodo.org/badge/1247715028.svg)](https://zenodo.org/badge/latestdoi/1247715028)
+
 Knowledge graph for TypeScript and JavaScript codebases — deterministic AST extraction, hybrid semantic + structural search.
 
 ## Overview
@@ -141,6 +149,30 @@ exclude = ["__tests__"]     # extra dirs to skip
 ## Author
 
 Eric G. Suchanek, PhD — Flux Frontiers
+
+## Citation
+
+If you use TypeScriptKG in your research or project, please cite it:
+
+[![DOI](https://zenodo.org/badge/1247715028.svg)](https://zenodo.org/badge/latestdoi/1247715028)
+
+> Suchanek, E. G. (2026). *TypeScriptKG: Semantic Knowledge Graph for TypeScript/JavaScript Codebases* (Version 0.4.0) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/tscode_kg
+
+```bibtex
+@software{suchanek_tscode_kg,
+  author    = {Suchanek, Eric G.},
+  title     = {{TypeScriptKG}: Semantic Knowledge Graph for TypeScript/JavaScript Codebases},
+  version   = {0.4.0},
+  year      = {2026},
+  publisher = {Flux-Frontiers},
+  url       = {https://github.com/Flux-Frontiers/tscode_kg},
+}
+```
+
+Full citation metadata in [`CITATION.cff`](CITATION.cff). This is the first
+release archived by Zenodo; the DOI resolves via the badge above once the
+archive completes, and this section is updated with the concept DOI directly
+afterward.
 
 ## License
 

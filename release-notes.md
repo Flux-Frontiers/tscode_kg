@@ -48,6 +48,13 @@ A separate documentation pass corrected 24 sites referencing the removed
 installable extras (`kg` is a Poetry group; `dev` no longer exists as either)
 and recommended a PyVista Jupyter extra this project deliberately avoids.
 
+**PyPI publishing moved into CI.** Earlier releases reached PyPI through a
+manual `poetry publish`; the release workflow only ever created the GitHub
+Release. A `publish` job using PyPI Trusted Publishing now runs automatically
+on every tag, matching the rest of the fleet. The README also gained the
+fleet-standard badge row and a `## Citation` section pointing at
+`CITATION.cff` — this is the package's first Zenodo-archived release.
+
 ## Upgrading
 
 Scripts that pass `tscodekg build --wipe` should drop the flag; `build` wipes
