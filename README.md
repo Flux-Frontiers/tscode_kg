@@ -6,7 +6,7 @@
 [![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/Flux-Frontiers/tscode_kg/releases)
 [![CI](https://github.com/Flux-Frontiers/tscode_kg/actions/workflows/ci.yml/badge.svg)](https://github.com/Flux-Frontiers/tscode_kg/actions/workflows/ci.yml)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
-[![DOI](https://zenodo.org/badge/1247715028.svg)](https://zenodo.org/badge/latestdoi/1247715028)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22559450-blue.svg)](https://doi.org/10.5281/zenodo.22559450)
 
 Knowledge graph for TypeScript and JavaScript codebases — deterministic AST extraction, hybrid semantic + structural search.
 
@@ -154,9 +154,9 @@ Eric G. Suchanek, PhD — Flux Frontiers
 
 If you use TypeScriptKG in your research or project, please cite it:
 
-[![DOI](https://zenodo.org/badge/1247715028.svg)](https://zenodo.org/badge/latestdoi/1247715028)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22559450-blue.svg)](https://doi.org/10.5281/zenodo.22559450)
 
-> Suchanek, E. G. (2026). *TypeScriptKG: Semantic Knowledge Graph for TypeScript/JavaScript Codebases* (Version 0.4.0) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/tscode_kg
+> Suchanek, E. G. (2026). *TypeScriptKG: Semantic Knowledge Graph for TypeScript/JavaScript Codebases* (Version 0.4.0) [Software]. Flux-Frontiers. https://doi.org/10.5281/zenodo.22559450
 
 ```bibtex
 @software{suchanek_tscode_kg,
@@ -165,14 +165,12 @@ If you use TypeScriptKG in your research or project, please cite it:
   version   = {0.4.0},
   year      = {2026},
   publisher = {Flux-Frontiers},
+  doi       = {10.5281/zenodo.22559450},
   url       = {https://github.com/Flux-Frontiers/tscode_kg},
 }
 ```
 
-Full citation metadata in [`CITATION.cff`](CITATION.cff). This is the first
-release archived by Zenodo; the DOI resolves via the badge above once the
-archive completes, and this section is updated with the concept DOI directly
-afterward.
+Full citation metadata in [`CITATION.cff`](CITATION.cff).
 
 ## License
 

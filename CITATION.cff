@@ -17,6 +17,9 @@ authors:
     affiliation: "Flux-Frontiers"
 version: "0.4.0"
 date-released: "2026-09-06"
+# Concept DOI: version-independent, always resolves to the newest archived
+# release. Do not replace it with a version-specific DOI at release time.
+doi: "10.5281/zenodo.22559450"
 license-url: "https://www.elastic.co/licensing/elastic-license"
 repository-code: "https://github.com/Flux-Frontiers/tscode_kg"
 url: "https://github.com/Flux-Frontiers/tscode_kg"
