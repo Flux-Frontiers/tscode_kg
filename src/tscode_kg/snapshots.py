@@ -4,9 +4,9 @@ snapshots.py — Temporal Snapshots of TypeScriptKG Metrics
 Thin layer over the shared ``kg_utils.snapshots`` module.  The shared module
 provides the canonical ``Snapshot``, ``SnapshotManifest``, ``SnapshotManager``,
 and ``PruneResult`` backed by free-form metric dicts; this module re-exports
-those types and adds a ``SnapshotManager`` subclass that defaults
-``package_name`` to ``"tscode-kg"`` so version auto-detection resolves to this
-package.
+those types and adds a ``SnapshotManager`` subclass whose entire body is the
+``package_name = "tscode-kg"`` class attribute, so version auto-detection
+resolves to this package.
 
 Snapshots are keyed on a caller-supplied release tag or, absent one, a UTC
 timestamp -- never a git tree hash, which is read before ``git add`` stages
@@ -28,8 +28,6 @@ Author: Eric G. Suchanek, PhD
 """
 
 from __future__ import annotations
-
-from pathlib import Path
 
 from kg_utils.snapshots import (
     PruneResult,  # noqa: F401  re-exported
@@ -53,16 +51,12 @@ class SnapshotManager(_BaseSnapshotManager):
     version auto-detection resolves against the installed ``tscode-kg``
     package instead of ``kg-utils``.
 
+    The whole class is one class attribute. It used to be an ``__init__``
+    whose entire body forwarded to ``super()`` to change that one string.
+
     :param snapshots_dir: Directory holding snapshot JSON files and manifest.
     :param package_name: Package whose installed version stamps snapshots.
     :param db_path: Optional SQLite graph path for per-module node counts.
     """
 
-    def __init__(
-        self,
-        snapshots_dir: Path | str,
-        *,
-        package_name: str = "tscode-kg",
-        db_path: Path | str | None = None,
-    ) -> None:
-        super().__init__(snapshots_dir, package_name=package_name, db_path=db_path)
+    package_name = "tscode-kg"

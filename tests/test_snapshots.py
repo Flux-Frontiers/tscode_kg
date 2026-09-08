@@ -171,3 +171,13 @@ class TestKeyScheme:
         assert on_disk["tree_hash"] == "e" * 40
         assert on_disk["tool"] == "tscode-kg"
         assert on_disk["tool_version"]
+
+
+def test_package_name_comes_from_the_class_attribute(tmp_path: Path) -> None:
+    """The manager is now one class attribute; this is the whole contract.
+
+    Against kgmodule-utils < 0.20.0 the base has no package_name class
+    attribute, so every snapshot's tool field would read "kg-utils".
+    """
+    assert SnapshotManager.package_name == "tscode-kg"
+    assert SnapshotManager(tmp_path / "snapshots").package_name == "tscode-kg"
