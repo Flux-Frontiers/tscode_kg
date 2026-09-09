@@ -166,17 +166,60 @@ class TSCodeKGAnalyzer:
         self.coderank_top_nodes: list[dict] = []
         self.concern_analysis: list[dict] = []
         self._phase_result: str = ""
+        #: Phases that could not run, with the reason. Rendered in the report
+        #: so a degraded run says what is missing rather than omitting it.
+        self.phase_failures: list[dict] = []
 
     # ------------------------------------------------------------------
     # Phase runner
     # ------------------------------------------------------------------
 
+    def _take_phase_result(self) -> str:
+        """Read and clear the one-line summary the phase just set.
+
+        Phases report through ``self._phase_result`` rather than a return
+        value, because they are called as bare ``Callable[[], None]``. Reading
+        it here rather than inline in :meth:`_run_phase` also keeps the read
+        away from that method's own ``= ""`` assignment, which a type checker
+        otherwise narrows to a literal it can never see ``fn()`` change.
+        """
+        result = self._phase_result
+        self._phase_result = ""
+        return f"  {result}" if result else ""
+
     def _run_phase(self, num: int, name: str, fn: Callable[[], None]) -> None:
+        """Run one analysis phase, reporting rather than propagating a failure.
+
+        A phase that cannot run must not take the other thirteen and the report
+        with it. The individual phases already guard the errors they expect
+        (``AttributeError``, ``ValueError``, ``RuntimeError``), but the ones
+        worth surviving are the ones nobody predicted -- the concrete case
+        being ``sqlite3.OperationalError: no such table: vec_nodes`` after
+        ``tscodekg build-sqlite``, a supported command that deliberately builds
+        the graph without the vector index. Only phase 4 seeds on a semantic
+        query; the other thirteen are pure SQL and have everything they need.
+        Aborting the run gave the user no report at all, and an error naming
+        an internal table rather than the missing step.
+
+        The failure is recorded in :attr:`phase_failures` and rendered in the
+        report, so a degraded run says which sections are missing and why
+        instead of quietly omitting them.
+        """
         self._phase_result = ""
         t0 = time.monotonic()
-        fn()
+        try:
+            fn()
+        except Exception as exc:  # noqa: BLE001 -- see docstring
+            elapsed = time.monotonic() - t0
+            self.phase_failures.append({"phase": num, "name": name, "error": str(exc)})
+            logger.warning("Phase %d (%s) failed: %s", num, name, exc)
+            self.console.print(
+                f"  [cyan]▶ Phase {num:2d}/{self._TOTAL_PHASES}:[/cyan]"
+                f" {name}  [yellow]skipped: {exc}[/yellow]  [green]({elapsed:.1f}s)[/green]"
+            )
+            return
         elapsed = time.monotonic() - t0
-        result = f"  {self._phase_result}" if self._phase_result else ""
+        result = self._take_phase_result()
         self.console.print(
             f"  [cyan]▶ Phase {num:2d}/{self._TOTAL_PHASES}:[/cyan]"
             f" {name}{result}  [green]({elapsed:.1f}s)[/green]"
@@ -1404,6 +1447,10 @@ Most-called functions and methods — potential bottlenecks or core APIs.
 """
         )
 
+        degraded = self._render_phase_failures()
+        if degraded:
+            report += "\n---\n\n" + degraded + "\n---\n"
+
         for i, metrics in enumerate(
             sorted(self.function_metrics.values(), key=lambda m: m.fan_in, reverse=True)[:15], 1
         ):
@@ -1641,6 +1688,39 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
         Path(report_path).write_text(report, encoding="utf-8")
         self.console.print(f"[green]✓[/green] Report written to {report_path}")
 
+    def _render_phase_failures(self) -> str:
+        """Render the degraded-run notice, or an empty string when all phases ran.
+
+        A phase that could not run leaves its section of the report empty. Said
+        plainly, that is a missing build step; left unsaid, it looks like a
+        finding about the codebase.
+        """
+        if not self.phase_failures:
+            return ""
+
+        lines = ["## Incomplete Analysis\n"]
+        lines.append(
+            f"{len(self.phase_failures)} of {self._TOTAL_PHASES} phases could not run. "
+            "The sections they produce are missing from this report — that is a gap in "
+            "the analysis, not a finding about the code.\n"
+        )
+        lines.append("| Phase | Name | Reason |")
+        lines.append("|---|---|---|")
+        for failure in self.phase_failures:
+            lines.append(f"| {failure['phase']} | {failure['name']} | `{failure['error']}` |")
+
+        if any(
+            "vec_nodes" in f["error"] or "no such table" in f["error"] for f in self.phase_failures
+        ):
+            lines.append(
+                "\n> The semantic index is missing. Only the fan-out phase needs it; "
+                "every other phase reads the SQLite graph directly, which is why the "
+                "rest of this report is complete. Run `tscodekg build --repo <path>` "
+                "(or `tscodekg build-index`) to build it, then re-run the analysis."
+            )
+        lines.append("")
+        return "\n".join(lines)
+
     def _compile_results(self) -> dict:
         """Compile all phase results into a serialisable dictionary."""
         sorted_fn = sorted(self.function_metrics.items(), key=lambda kv: kv[1].fan_in, reverse=True)
@@ -1676,6 +1756,10 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
             ],
             "centrality_modules": self.centrality_modules,
             "coderank_top_nodes": self.coderank_top_nodes,
+            # A caller reading the dict rather than the Markdown needs the same
+            # signal the report carries: an empty section here means a phase did
+            # not run, not that the codebase has nothing to show.
+            "phase_failures": self.phase_failures,
         }
 
     def to_markdown(self) -> str:
@@ -1692,6 +1776,11 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
         out.append("# TypeScriptKG Repository Analysis\n")
         out.append(f"**Generated:** {datetime.datetime.now(datetime.UTC).isoformat()}  \n")
         out.append("\n---\n")
+
+        degraded = self._render_phase_failures()
+        if degraded:
+            out.append(degraded)
+            out.append("\n---\n")
 
         out.append("## Baseline Metrics\n")
         out.append("| Metric | Value |")
