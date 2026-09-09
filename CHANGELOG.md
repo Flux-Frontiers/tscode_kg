@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A failing analysis phase no longer aborts the whole run.** `tscodekg
+  analyze` after `tscodekg build-sqlite` produced no report at all and an
+  error naming an internal table -- `sqlite3.OperationalError: no such table:
+  vec_nodes` -- because phase 4 seeds on a semantic query and `build-sqlite`
+  deliberately builds the graph without the vector index. It is a supported
+  command, so that combination is a supported state.
+
+  The individual phases already guard the errors they expect
+  (`AttributeError`, `ValueError`, `RuntimeError`); the ones worth surviving
+  are the ones nobody predicted. `_run_phase` now catches per phase, records
+  the failure, and continues. Only phase 4 needs the index -- the other
+  thirteen are pure SQL -- so the run that produced nothing now produces
+  thirteen-fourteenths of a report.
+
+  A degraded run says so. Both the printed and the `--report` output carry an
+  **Incomplete Analysis** section naming each phase that could not run, the
+  reason, and the command that fixes it. A phase that fails silently leaves
+  its section empty, which reads as a finding about the codebase rather than
+  as a missing build step.
+
+  Found while building SwiftKG, which is ported from this module and
+  inherited the same defect.
+
 ## [0.5.0] - 2026-09-08
 
 ### Changed

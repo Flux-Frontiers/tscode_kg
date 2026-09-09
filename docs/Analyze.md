@@ -38,6 +38,13 @@ The `tscodekg analyze` command runs the 14-phase `TSCodeKGAnalyzer` over the kno
 13. Snapshot history
 14. Structural centrality (SIR PageRank)
 
+Thirteen of the fourteen read the SQLite graph directly. Only **phase 4**
+seeds on a semantic query, so a graph built with `tscodekg build-sqlite` — which
+deliberately skips the vector index — still produces a near-complete report.
+A phase that cannot run costs that phase, not the run: the report carries an
+**Incomplete Analysis** section naming what was skipped, why, and the command
+that fixes it.
+
 ---
 
 ## Quick Start
