@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The snapshot manager is now one class attribute.** `SnapshotManager` was an
+  `__init__` whose entire body forwarded to `super()` to change one string;
+  `kgmodule-utils` 0.20.0 reads `package_name` off the class, so the method goes
+  and the attribute stays. `snapshots.py` drops from 68 lines to 55. Seven of
+  the fleet's eight KG modules carried the same override.
+
+- **The floor on `kgmodule-utils` moves to `>=0.20.0`**, a hard requirement
+  rather than a preference: against 0.19.x the base has no `package_name` class
+  attribute, so every snapshot's `tool` field would read `"kg-utils"`.
+
+### Fixed
+
+- **The `doc-kg` and `pycode-kg` tooling pins** now floor on the releases that
+  retired those packages' own snapshot overrides -- doc-kg 0.26.0 and
+  pycode-kg 0.27.0 -- so `poetry install --with kg` cannot resolve a dockg or
+  pycodekg predating the shared extension points into an environment that
+  depends on them.
+
+
 ## [0.4.0] - 2026-09-06
 
 ### Added

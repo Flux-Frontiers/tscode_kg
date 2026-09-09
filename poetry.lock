@@ -950,19 +950,19 @@ files = [
 
 [[package]]
 name = "doc-kg"
-version = "0.25.0"
+version = "0.26.0"
 description = "A tool to build a semantically searchable knowledge graph from markdown and text documents"
 optional = false
 python-versions = "<3.14,>=3.12"
 groups = ["kg"]
 files = [
-    {file = "doc_kg-0.25.0-py3-none-any.whl", hash = "sha256:96bc791bb6191a0c08b3101e1de4557a9752da8d5a62e1522a1fa28ffad85ce9"},
-    {file = "doc_kg-0.25.0.tar.gz", hash = "sha256:f189bdb4ca8a8ff335a3ae2eafb432a53e7173d60eae5cbd4b5f75fa8fe8c20a"},
+    {file = "doc_kg-0.26.0-py3-none-any.whl", hash = "sha256:0827bed5b18c8f72650fb2b7c823850a49381db4979bcce8905e87e7a0ef14b0"},
+    {file = "doc_kg-0.26.0.tar.gz", hash = "sha256:a7b0968b665c46fe8a8220095f06347f3650f6ee778f29573a5a51233d904c71"},
 ]
 
 [package.dependencies]
 click = ">=8.1.0,<9"
-kgmodule-utils = {version = ">=0.19.0", extras = ["semantic"]}
+kgmodule-utils = {version = ">=0.20.0", extras = ["semantic"]}
 mcp = ">=1.0.0,<2"
 pymupdf4llm = ">=0.0.17"
 pyyaml = ">=6.0.0"
@@ -3060,19 +3060,19 @@ files = [
 
 [[package]]
 name = "pycode-kg"
-version = "0.26.0"
+version = "0.27.0"
 description = "A tool to build a searchable knowledge graph from Python repositories"
 optional = false
 python-versions = "<3.14,>=3.12"
 groups = ["kg"]
 files = [
-    {file = "pycode_kg-0.26.0-py3-none-any.whl", hash = "sha256:e1a513b583f6f094568292f62af04f9fc563a4b553f4d71a31ececa51be2cfb8"},
-    {file = "pycode_kg-0.26.0.tar.gz", hash = "sha256:4252ddb8a8f97cadfab8998a1c9ab37b9609313df9e5487fb88b6803fac6bc0d"},
+    {file = "pycode_kg-0.27.0-py3-none-any.whl", hash = "sha256:39eac05f5fc3be2e39ad9bff5789fc5824721a5ca4311f47511b2cfc4c12db8f"},
+    {file = "pycode_kg-0.27.0.tar.gz", hash = "sha256:bc2d4f591a095897301b24c3b4b64b7e04aebaf36394381cc264610540178e80"},
 ]
 
 [package.dependencies]
 click = ">=8.1.0,<9"
-kgmodule-utils = {version = ">=0.19.0", extras = ["semantic", "viz3d"]}
+kgmodule-utils = {version = ">=0.20.0", extras = ["semantic", "viz3d"]}
 mcp = ">=1.0.0,<2"
 networkx = ">=3.0"
 numpy = ">=1.24.0"
@@ -3086,7 +3086,7 @@ torch = ">=2.5.1"
 [package.extras]
 all = ["PyQt5 (>=5.15.0)", "markdown (>=3.6)", "param (>=2.0.0)", "plotly (>=5.14.0)", "pyvis (>=0.3.2)", "pyvista (>=0.44.0)", "pyvistaqt (>=0.11.0)", "quiltwright (>=0.8.0)", "streamlit (>=1.56.0)", "trame-vtk (>=2.0.0)"]
 viz = ["plotly (>=5.14.0)", "pyvis (>=0.3.2)", "streamlit (>=1.56.0)"]
-viz3d = ["PyQt5 (>=5.15.0)", "kgmodule-utils[viz3d-qt,viz3d-render] (>=0.18.1)", "markdown (>=3.6)", "param (>=2.0.0)", "pyvistaqt (>=0.11.0)", "quiltwright (>=0.8.0)", "trame-vtk (>=2.0.0)"]
+viz3d = ["PyQt5 (>=5.15.0)", "kgmodule-utils[viz3d-qt,viz3d-render] (>=0.20.0)", "markdown (>=3.6)", "param (>=2.0.0)", "pyvistaqt (>=0.11.0)", "quiltwright (>=0.8.0)", "trame-vtk (>=2.0.0)"]
 
 [[package]]
 name = "pycparser"
@@ -5396,4 +5396,4 @@ viz3d = ["PyQt5", "markdown", "param", "pyvista", "pyvistaqt", "trame-vtk"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "8cbf235bdad993341f33cfc5df927eab57f2fee0075307eb8359112b7c3d9ce5"
+content-hash = "ca32da240f53475238a47f7bca55030e779b89505b899db14f5f263036862820"
