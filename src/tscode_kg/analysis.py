@@ -1710,7 +1710,10 @@ Cohesion = incoming-callers / (incoming + outgoing + 1). Higher = more internall
             lines.append(f"| {failure['phase']} | {failure['name']} | `{failure['error']}` |")
 
         if any(
-            "vec_nodes" in f["error"] or "no such table" in f["error"] for f in self.phase_failures
+            "vec_nodes" in f["error"]
+            or "no such table" in f["error"]
+            or "Vector store not found" in f["error"]
+            for f in self.phase_failures
         ):
             lines.append(
                 "\n> The semantic index is missing. Only the fan-out phase needs it; "
