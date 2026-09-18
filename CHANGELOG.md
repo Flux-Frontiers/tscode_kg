@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-17
+
 ### Changed
 
 - **`kgmodule-utils` floor raised to `>=0.22.0`** (was `>=0.20.0`), and the
@@ -38,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Found while building SwiftKG, which is ported from this module and
   inherited the same defect.
+
+- **The "build the index" hint survives `kgmodule-utils` 0.22.0.** The
+  degraded-run notice was keyed on the old raw driver text (`no such table:
+  vec_nodes`). 0.22.0 reports a missing store as `VectorStoreNotFoundError`
+  ("Vector store not found: <path>. ..."), so with the new floor phase 4 still
+  failed and was recorded, but the explanation and the `tscodekg build` fix
+  never rendered. The match now accepts either message.
 
 ## [0.5.0] - 2026-09-08
 

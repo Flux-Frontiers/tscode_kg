@@ -1,35 +1,42 @@
-# Release Notes — v0.5.0
+# Release Notes -- v0.5.1
 
-> Released: 2026-09-08
+> Released: 2026-09-17
 
-A small maintenance release: the snapshot manager sheds a redundant override,
-and the fleet-shared tooling floors it depends on move up to the releases
-that made that override unnecessary in the first place.
+`tscodekg analyze` now produces a report for a graph that has no vector index.
+Before this release, running `analyze` after `build-sqlite` -- a supported
+combination, since `build-sqlite` deliberately skips the index -- printed an
+internal database error naming a table the user had never heard of, and wrote
+no report at all.
 
 ## What changed
 
-**The snapshot manager is now one class attribute.** `SnapshotManager`
-previously carried an `__init__` whose entire body forwarded to `super()`
-just to set one string. `kgmodule-utils` 0.20.0 reads `package_name` directly
-off the class, so the constructor override is gone and `snapshots.py` drops
-from 68 lines to 55. Seven of the fleet's eight KG modules carried the same
-now-unnecessary override.
+**One failing phase no longer costs the whole report.** The analysis runs
+fourteen phases. Only one of them, fan-out, needs the semantic index; the
+other thirteen read the SQLite graph directly. Each phase now runs on its own
+terms: a failure is recorded and the run continues, so the same command that
+used to produce nothing now produces a complete report minus one section.
 
-**The `kgmodule-utils` floor moves to `>=0.20.0`**, a hard requirement rather
-than a preference: against 0.19.x the base class has no `package_name`
-attribute, so every snapshot's `tool` field would silently read `"kg-utils"`
-instead of `"tscode-kg"`.
+**A degraded report says it is degraded.** Both the printed output and the
+`--report` file carry an *Incomplete Analysis* section naming each phase that
+could not run, the reason, and the command that fixes it. When the missing
+piece is the semantic index, it says so and points at `tscodekg build`. An
+empty section with no explanation would read as a finding about your code
+rather than as a build step you skipped.
 
-**The `doc-kg` and `pycode-kg` floors move to 0.26.0 and 0.27.0**, the
-releases that retired those packages' own equivalent snapshot overrides.
-`poetry install --with kg` can no longer resolve a `dockg` or `pycodekg`
-predating the shared extension point this repo now depends on.
+**That hint survives the new SDK.** `kgmodule-utils` 0.22.0 reports a missing
+vector store with a clearer, typed error than the raw database message it
+replaced. The notice was matching the old text, so with the new SDK it would
+have stopped appearing. It now recognises both.
+
+**Current dependencies.** `kgmodule-utils` is now required at `>=0.22.0`, the
+fleet's current release.
 
 ## Upgrading
 
-Reinstall with `poetry install --with dev` (or `--with kg` if you use the
-snapshot tooling) to pick up the raised floors. No CLI flags or config
-changed.
+Nothing to do beyond upgrading the package. Existing graphs, vector indexes
+and snapshots are read as before. If an analysis report now lists an
+incomplete phase, run `tscodekg build` to create the semantic index and
+re-run `tscodekg analyze`.
 
 ---
 
