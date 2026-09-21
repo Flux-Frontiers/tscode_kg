@@ -68,7 +68,7 @@ dependencies = [
     # manager is now the package_name class attribute, where it used to be an
     # __init__ that only forwarded to super(). Against 0.19.x the manager
     # reports itself as "kg-utils" in every snapshot's tool field.
-    "kgmodule-utils[semantic,sqlite-vec]>=0.22.0",
+    "kgmodule-utils[semantic,sqlite-vec]>=0.23.0",
     "click>=8.1.0,<9",
     # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
     # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
