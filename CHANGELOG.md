@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A snapshot saved without VERSION records the repo's own version**, read
+  from its root `package.json` or, failing that, its `CITATION.cff`. It used
+  to record `tscode-kg`'s version, so a snapshot of `knowledge_press` 1.23.0
+  said 0.6.0. The tool's version is still in `tool_version`, and the key is
+  still a UTC timestamp; only an explicit VERSION becomes the key.
+
 ## [0.6.0] - 2026-09-21
 
 ### Added
