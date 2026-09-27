@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tscode_kg.snapshots import SnapshotManager
 
 
@@ -181,3 +183,64 @@ def test_package_name_comes_from_the_class_attribute(tmp_path: Path) -> None:
     """
     assert SnapshotManager.package_name == "tscode-kg"
     assert SnapshotManager(tmp_path / "snapshots").package_name == "tscode-kg"
+
+
+class TestRepoVersion:
+    """With no VERSION given, a snapshot records the measured repo's version."""
+
+    def test_root_package_json(self, tmp_path: Path) -> None:
+        from tscode_kg.cli.cmd_snapshot import repo_version
+
+        (tmp_path / "package.json").write_text('{"name": "web", "version": "2.3.4"}')
+        (tmp_path / "CITATION.cff").write_text('version: "9.9.9"\n')
+        assert repo_version(tmp_path) == "2.3.4"
+
+    def test_citation_when_no_root_package_json(self, tmp_path: Path) -> None:
+        from tscode_kg.cli.cmd_snapshot import repo_version
+
+        (tmp_path / "CITATION.cff").write_text('cff-version: "1.2.0"\nversion: "1.24.0"\n')
+        assert repo_version(tmp_path) == "1.24.0"
+
+    def test_package_json_without_version_falls_through(self, tmp_path: Path) -> None:
+        from tscode_kg.cli.cmd_snapshot import repo_version
+
+        (tmp_path / "package.json").write_text('{"private": true}')
+        (tmp_path / "CITATION.cff").write_text("version: 1.0.0\n")
+        assert repo_version(tmp_path) == "1.0.0"
+
+    def test_unreadable_package_json_falls_through(self, tmp_path: Path) -> None:
+        from tscode_kg.cli.cmd_snapshot import repo_version
+
+        (tmp_path / "package.json").write_text("{not json")
+        assert repo_version(tmp_path) is None
+
+    def test_neither(self, tmp_path: Path) -> None:
+        from tscode_kg.cli.cmd_snapshot import repo_version
+
+        assert repo_version(tmp_path) is None
+
+    def test_capture_records_repo_version_and_keeps_timestamp_key(self, tmp_repo: Path) -> None:
+        pytest.importorskip("tree_sitter_typescript")
+        import tscode_kg
+        from tscode_kg.cli.cmd_snapshot import capture_snapshot
+        from tscode_kg.kg import TypeScriptKG
+
+        (tmp_repo / "CITATION.cff").write_text('version: "1.24.0"\n')
+        db = tmp_repo / ".tscodekg" / "graph.sqlite"
+        kg = TypeScriptKG(repo_root=tmp_repo, db_path=db)
+        kg.build_graph(wipe=True)
+        kg.close()
+
+        capture_snapshot(
+            version=None,
+            repo=str(tmp_repo),
+            db=None,
+            snapshots_dir=None,
+            branch="main",
+            tree_hash="a" * 40,
+        )
+
+        snap = SnapshotManager(tmp_repo / ".tscodekg" / "snapshots").load_manifest().snapshots[0]
+        assert snap["version"] == "1.24.0"
+        assert snap["tool_version"] == tscode_kg.__version__
+        assert snap["key"] != "1.24.0"

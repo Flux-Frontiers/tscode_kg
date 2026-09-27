@@ -14,11 +14,37 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from pathlib import Path
 
 import click
 
 logger = logging.getLogger(__name__)
+
+_CFF_VERSION_RE = re.compile(r'^version:\s*["\']?([^"\'\s]+)', re.M)
+
+
+def repo_version(repo_root: Path) -> str | None:
+    """Return the measured repo's own version, if it declares one.
+
+    Reads ``version`` from the root ``package.json``, then from
+    ``CITATION.cff``, which covers a repo whose ``package.json`` sits in a
+    subdirectory or that has none.
+
+    :param repo_root: Repository root.
+    :return: The version string, or ``None`` when neither file declares one.
+    """
+    try:
+        version = json.loads((repo_root / "package.json").read_text()).get("version")
+    except (OSError, ValueError, AttributeError):
+        version = None
+    if isinstance(version, str) and version:
+        return version
+    try:
+        match = _CFF_VERSION_RE.search((repo_root / "CITATION.cff").read_text())
+    except OSError:
+        return None
+    return match.group(1) if match else None
 
 
 @click.group("snapshot")
@@ -85,9 +111,10 @@ def save_snapshot(
     Reads graph statistics and JSDoc coverage from the SQLite graph, runs the
     analyzer for issue counts and hotspots, then saves a snapshot keyed on
     VERSION. Omit VERSION and the snapshot is keyed on a UTC timestamp, which
-    is the right answer for a corpus with no release tag. The tree hash is
-    recorded as provenance and auto-detected from git when not provided; it
-    is not the key.
+    is the right answer for a corpus with no release tag, and records the
+    repo's own version from its root package.json or CITATION.cff. The tree
+    hash is recorded as provenance and auto-detected from git when not
+    provided; it is not the key.
 
     Snapshots are stored in .tscodekg/snapshots/{key}.json, with a
     manifest.json tracking all snapshots and their metrics.
@@ -118,10 +145,11 @@ def capture_snapshot(
 ) -> None:
     """Capture and persist a snapshot; shared by ``snapshot save`` and ``init``.
 
-    :param version: Release tag, becoming the snapshot's key; auto-detected
-        from the installed package when falsy, which then yields a UTC
-        timestamp key instead -- the right answer for a corpus, not a repo
-        release. Never used as the key without being explicitly passed here.
+    :param version: Release tag, becoming the snapshot's key. When falsy,
+        the snapshot records the repo's own version from :func:`repo_version`
+        (or, failing that, the installed package's) and is keyed on a UTC
+        timestamp instead. Never used as the key without being explicitly
+        passed here.
     :param repo: Repository root path.
     :param db: SQLite graph path; defaults to ``<repo>/.tscodekg/graph.sqlite``.
     :param snapshots_dir: Snapshots directory; defaults to ``<repo>/.tscodekg/snapshots``.
@@ -129,7 +157,8 @@ def capture_snapshot(
     :param tree_hash: Git tree hash, recorded as provenance; auto-detected
         when empty. It is not the snapshot's key.
     :param subject: What was measured, e.g. ``repo:tscode-kg``. Recorded
-        separately from ``version``, which names the measuring tool.
+        separately from ``tool`` and ``tool_version``, which name the measuring
+        tool.
     """
     from tscode_kg.kg import TypeScriptKG  # pylint: disable=import-outside-toplevel
     from tscode_kg.snapshots import SnapshotManager  # pylint: disable=import-outside-toplevel
@@ -180,7 +209,7 @@ def capture_snapshot(
         kg.close()
 
     snapshot_obj = snap_mgr.capture(
-        version=version or None,
+        version=version or repo_version(repo_root),
         branch=branch,
         graph_stats_dict=stats,
         critical_issues=critical_issues,
@@ -188,8 +217,8 @@ def capture_snapshot(
         hotspots=hotspots,
         issues=issue_strings,
         tree_hash=tree_hash,
-        # An explicit VERSION is a release tag and becomes the key. An
-        # auto-detected one is the measuring tool's version and must not be.
+        # An explicit VERSION is a release tag and becomes the key. A
+        # detected one (the repo's, or the tool's) must not be.
         key=version or "",
         subject=subject,
     )
