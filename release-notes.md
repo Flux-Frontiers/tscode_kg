@@ -1,27 +1,23 @@
-# Release Notes -- v0.6.0
+# Release Notes -- v0.7.0
 
-> Released: 2026-09-21
+> Released: 2026-09-26
 
-TypeScriptKG's MCP server now closes the graph database when it shuts down. No
-index rebuild, no migration, no CLI change.
+A snapshot saved without a VERSION now records the version of the repo it
+measured, not the version of `tscode-kg`.
 
 ## What changed
 
-**The MCP server closes the graph on shutdown.** `tscodekg-mcp` wires an
-`asynccontextmanager` into `FastMCP(lifespan=...)`, so the SQLite connection is
-released when the server stops rather than left to process exit. One hook
-covers both the stdio and SSE transports, because both route through the same
-underlying `Server.run()`.
-
-This is the resource-cleanup pattern the fleet standardised on, verified
-against a real server run rather than a stubbed `close`. It matters most for
-the case TypeScriptKG is actually used in: an editor or agent that keeps the
-server alive across many requests and then restarts it.
+**Snapshots name the subject's version.** `tscodekg snapshot save` with no
+VERSION reads the repo's version from its root `package.json`, then from
+`CITATION.cff`, and falls back to the installed package only when neither
+declares one. Before, a snapshot of `knowledge_press` 1.23.0 recorded 0.6.0.
+The measuring tool's version stays in `tool_version`, and the key is still a
+UTC timestamp; only an explicit VERSION becomes the key.
 
 ## Upgrading
 
-Nothing to do. If you run `tscodekg-mcp` inside a long-lived process, it now
-leaves no database handle behind when it stops.
+Nothing to rebuild. Existing snapshots are unchanged. Release snapshots should
+still pass the version explicitly, as before.
 
 ---
 
