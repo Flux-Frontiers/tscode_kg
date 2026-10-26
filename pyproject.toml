@@ -68,12 +68,10 @@ dependencies = [
     # manager is now the package_name class attribute, where it used to be an
     # __init__ that only forwarded to super(). Against 0.19.x the manager
     # reports itself as "kg-utils" in every snapshot's tool field.
-    "kgmodule-utils[semantic,sqlite-vec]>=0.23.0",
+    # 0.29.0: the MCP server is kg_utils.mcp's ([mcp] brings mcp itself),
+    # stats() is the fleet stats shape, and LanceDB is gone.
+    "kgmodule-utils[semantic,sqlite-vec,mcp]>=0.29.0",
     "click>=8.1.0,<9",
-    # The server is kg_utils.mcp's now, which needs kgmodule-utils 0.29.0 (on
-    # the local wheel until the fleet lap ends). At that release this line goes
-    # and the floor below becomes kgmodule-utils[semantic,sqlite-vec,mcp]>=0.29.0.
-    "mcp>=1.3.0,<2",
     "networkx>=3.0",
 ]
 
