@@ -1,0 +1,270 @@
+{
+  "name": "pycodekg",
+  "kind": "code",
+  "canonical": [
+    "stats",
+    "query",
+    "pack",
+    "get_node",
+    "neighbors"
+  ],
+  "tools": [
+    {
+      "name": "stats",
+      "description": "Node and edge counts, in total and by kind and relation, plus the KG's own measures.\n\n        Reads the graph only: never loads the embedding model, so it is the\n        cheap first call of a session.",
+      "input_schema": {
+        "properties": {},
+        "title": "statsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "query",
+      "description": "Hybrid semantic + structural search: ranked code nodes and the edges among them.\n\n    Seeds on vector similarity, then expands through the graph. Use ``pack``\n    instead when you want the source itself.\n\n    **hop:** ``0`` is pure semantic search, highest precision, best for\n    concept lookup (\"find the retry logic\"); ``1`` (default) adds call chains\n    and module relationships; ``2`` traces dependencies broadly and may return\n    many loosely related nodes.\n\n    **rerank_mode:** ``hybrid`` (default) blends vector similarity (70%) with\n    lexical overlap on name, qualname, module and docstring (30%), the best\n    overall; ``semantic`` ranks by vector score only; ``legacy`` orders by hop\n    distance first, for stable comparisons with older results.\n\n    :param q: Natural-language query, e.g. \"database connection setup\".\n    :param k: Semantic seed nodes (1-100, default 8).\n    :param hop: Graph expansion hops from each seed (0-5, default 1).\n    :param rels: Edge types to follow; omit for CONTAINS, CALLS, IMPORTS, INHERITS.\n    :param include_symbols: Include ``sym:`` import-stub nodes (default False).\n    :param max_nodes: Most nodes to return (default 25).\n    :param min_score: Minimum semantic score for a seed, 0.0-1.0; 0.5 filters\n        out incidental docstring mentions.\n    :param max_per_module: Most nodes from one module (default 3; 0 disables),\n        so one popular module cannot dominate a hop-1 expansion.\n    :param paths: Comma-separated module path prefixes to keep, e.g.\n        ``\"src/pycode_kg\"`` to leave out tests and scripts.\n    :param rerank_mode: ``hybrid`` (default), ``semantic`` or ``legacy``.\n    :param rerank_semantic_weight: Semantic weight for ``hybrid`` (default 0.7).\n    :param rerank_lexical_weight: Lexical weight for ``hybrid`` (default 0.3).\n    :param include_edge_provenance: Annotate inferred edges with confidence\n        and resolution metadata.",
+      "input_schema": {
+        "properties": {
+          "q": {
+            "title": "Q",
+            "type": "string"
+          },
+          "k": {
+            "default": 8,
+            "title": "K",
+            "type": "integer"
+          },
+          "hop": {
+            "default": 1,
+            "title": "Hop",
+            "type": "integer"
+          },
+          "rels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rels"
+          },
+          "include_symbols": {
+            "default": false,
+            "title": "Include Symbols",
+            "type": "boolean"
+          },
+          "max_nodes": {
+            "default": 25,
+            "title": "Max Nodes",
+            "type": "integer"
+          },
+          "min_score": {
+            "default": 0.0,
+            "title": "Min Score",
+            "type": "number"
+          },
+          "max_per_module": {
+            "default": 3,
+            "title": "Max Per Module",
+            "type": "integer"
+          },
+          "paths": {
+            "default": "",
+            "title": "Paths",
+            "type": "string"
+          },
+          "rerank_mode": {
+            "default": "hybrid",
+            "title": "Rerank Mode",
+            "type": "string"
+          },
+          "rerank_semantic_weight": {
+            "default": 0.7,
+            "title": "Rerank Semantic Weight",
+            "type": "number"
+          },
+          "rerank_lexical_weight": {
+            "default": 0.3,
+            "title": "Rerank Lexical Weight",
+            "type": "number"
+          },
+          "include_edge_provenance": {
+            "default": false,
+            "title": "Include Edge Provenance",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "q"
+        ],
+        "title": "queryArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "pack",
+      "description": "Hybrid search rendered as a Markdown context pack of source code with line numbers.\n\n    The answer to \"how does X work?\": ranked, deduplicated snippets ready to\n    read, with a Warnings section when a snippet is capped or omitted for\n    missing line metadata. Same search and ``rerank_mode`` as ``query``.\n\n    :param q: Natural-language query, e.g. \"configuration loading\".\n    :param k: Semantic seed nodes (1-100, default 8).\n    :param hop: Graph expansion hops (0-5, default 1).\n    :param rels: Edge types to follow; omit for CONTAINS, CALLS, IMPORTS, INHERITS.\n    :param include_symbols: Include ``sym:`` import-stub nodes (default False).\n    :param context: Extra lines around each definition (default 5).\n    :param max_lines: Longest snippet, in lines (default 60).\n    :param max_nodes: Most snippets (default 15).\n    :param min_score: Minimum semantic score for a seed, 0.0-1.0.\n    :param max_per_module: Most nodes from one module (default 3; 0 disables).\n    :param rerank_mode: ``hybrid`` (default), ``semantic`` or ``legacy``.\n    :param rerank_semantic_weight: Semantic weight for ``hybrid`` (default 0.7).\n    :param rerank_lexical_weight: Lexical weight for ``hybrid`` (default 0.3).\n    :param missing_lineno_policy: ``cap_or_skip`` (default) falls back to a\n        capped parent span or omits the snippet; ``legacy`` keeps the old\n        uncapped behaviour.\n    :param include_edge_provenance: Annotate inferred edges with confidence\n        and resolution metadata.",
+      "input_schema": {
+        "properties": {
+          "q": {
+            "title": "Q",
+            "type": "string"
+          },
+          "k": {
+            "default": 8,
+            "title": "K",
+            "type": "integer"
+          },
+          "hop": {
+            "default": 1,
+            "title": "Hop",
+            "type": "integer"
+          },
+          "rels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rels"
+          },
+          "include_symbols": {
+            "default": false,
+            "title": "Include Symbols",
+            "type": "boolean"
+          },
+          "context": {
+            "default": 5,
+            "title": "Context",
+            "type": "integer"
+          },
+          "max_lines": {
+            "default": 60,
+            "title": "Max Lines",
+            "type": "integer"
+          },
+          "max_nodes": {
+            "default": 15,
+            "title": "Max Nodes",
+            "type": "integer"
+          },
+          "min_score": {
+            "default": 0.0,
+            "title": "Min Score",
+            "type": "number"
+          },
+          "max_per_module": {
+            "default": 3,
+            "title": "Max Per Module",
+            "type": "integer"
+          },
+          "rerank_mode": {
+            "default": "hybrid",
+            "title": "Rerank Mode",
+            "type": "string"
+          },
+          "rerank_semantic_weight": {
+            "default": 0.7,
+            "title": "Rerank Semantic Weight",
+            "type": "number"
+          },
+          "rerank_lexical_weight": {
+            "default": 0.3,
+            "title": "Rerank Lexical Weight",
+            "type": "number"
+          },
+          "missing_lineno_policy": {
+            "default": "cap_or_skip",
+            "title": "Missing Lineno Policy",
+            "type": "string"
+          },
+          "include_edge_provenance": {
+            "default": false,
+            "title": "Include Edge Provenance",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "q"
+        ],
+        "title": "packArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_node",
+      "description": "One node by id, with its kind, location, docstring and metadata.\n\n        :param node_id: The node's id, as `query`, `pack` or `neighbors` returned it.",
+      "input_schema": {
+        "properties": {
+          "node_id": {
+            "title": "Node Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "node_id"
+        ],
+        "title": "get_nodeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "neighbors",
+      "description": "A node's one-hop neighbourhood: its edges and the nodes at their far ends.\n\n        Reads the graph only, so it never loads the embedding model.\n\n        :param node_id: The node whose neighbours to return.\n        :param rels: Edge types to follow; omit for all of them.\n        :param direction: \"out\" (edges from the node), \"in\" (edges to it) or \"both\".\n        :param limit: Most edges to return (1-500).",
+      "input_schema": {
+        "properties": {
+          "node_id": {
+            "title": "Node Id",
+            "type": "string"
+          },
+          "rels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rels"
+          },
+          "direction": {
+            "default": "both",
+            "enum": [
+              "out",
+              "in",
+              "both"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "limit": {
+            "default": 50,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "node_id"
+        ],
+        "title": "neighborsArguments",
+        "type": "object"
+      }
+    }
+  ]
+}

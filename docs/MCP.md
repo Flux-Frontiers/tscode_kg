@@ -10,16 +10,17 @@
 
 TypeScriptKG ships a built-in MCP server (`tscodekg mcp`) that exposes the full hybrid query and snippet-pack pipeline as structured tools consumable by any MCP-compatible AI agent — Claude Code, Claude Desktop, Cursor, Continue, GitHub Copilot, or Kilo Code.
 
-Once configured, the agent gains nineteen tools, grouped by purpose:
+Once configured, the agent gains twenty tools, grouped by purpose. `stats`, `query`, `pack`, `get_node` and `neighbors` are the fleet's canonical tools, named the same on every KG server; the other fifteen are TypeScriptKG's own. `tscodekg mcp --manifest` prints the live list, with every parameter, as JSON without opening the graph.
 
 **Discovery & exploration**
 
 | Tool | Purpose |
 |---|---|
-| `graph_stats()` | Codebase size and shape — good first call |
-| `query_codebase(q)` | Semantic + structural graph exploration |
-| `pack_snippets(q)` | Source-grounded code snippets for implementation detail |
-| `get_node(node_id, include_edges)` | Single node metadata; optionally returns immediate neighborhood |
+| `stats()` | Codebase size and shape — good first call |
+| `query(q)` | Semantic + structural graph exploration |
+| `pack(q)` | Source-grounded code snippets for implementation detail |
+| `get_node(node_id)` | Single node metadata |
+| `neighbors(node_id, rels, direction, limit)` | A node's one-hop edges and the nodes at their far ends |
 | `list_nodes(module_path, kind)` | List nodes filtered by module path prefix and/or kind |
 | `find_node(name, kind)` | Search nodes by (partial) name when you don't know the stable ID |
 | `find_definition_at(file, line)` | Reverse-lookup the node spanning a `file:line` location |
@@ -79,13 +80,23 @@ Expected output shape:
 
 ```json
 {
-  "total_nodes": 412,
-  "total_edges": 1087,
-  "node_counts": { "module": 18, "class": 12, "interface": 25, "function": 201, "method": 96 },
-  "edge_counts": { "CONTAINS": 378, "CALLS": 512, "IMPORTS": 147, "IMPLEMENTS": 30, "EXTENDS": 20 },
-  "db_path": ".tscodekg/graph.sqlite"
+  "kind": "code",
+  "nodes": {
+    "total": 352,
+    "by_kind": { "module": 18, "class": 12, "interface": 25, "function": 201, "method": 96 }
+  },
+  "edges": {
+    "total": 1087,
+    "by_rel": { "CONTAINS": 378, "CALLS": 512, "IMPORTS": 147, "IMPLEMENTS": 30, "EXTENDS": 20 }
+  },
+  "meaningful_nodes": 352,
+  "docstring_coverage": 0.62,
+  "db_path": ".tscodekg/graph.sqlite",
+  "vector_backend": "sqlite-vec"
 }
 ```
+
+This is the fleet's stats shape, the same on every KG server: `nodes` and `edges` with a `total` and a breakdown, and TypeScriptKG's own measures (`meaningful_nodes`, `docstring_coverage`, ...) beside them.
 
 If this succeeds, the MCP server will work correctly.
 
@@ -93,7 +104,7 @@ If this succeeds, the MCP server will work correctly.
 
 ## Tool Reference
 
-### `graph_stats()`
+### `stats()`
 
 Return node and edge counts broken down by kind and relation, plus JSDoc coverage.
 
@@ -101,11 +112,11 @@ Return node and edge counts broken down by kind and relation, plus JSDoc coverag
 
 **Parameters:** None.
 
-**Returns:** Markdown summary with total nodes, meaningful nodes (excluding `sym:` stubs), total edges, JSDoc coverage (fraction of functions/methods with JSDoc comments), a nodes-by-kind table, and an edges-by-relation table.
+**Returns:** JSON in the fleet's stats shape (see the smoke test above): `kind`, `nodes.total` and `nodes.by_kind`, `edges.total` and `edges.by_rel`, plus meaningful nodes (excluding `sym:` stubs), JSDoc coverage (fraction of functions/methods with JSDoc comments) and the database path. Reads the graph only; never loads the embedding model.
 
 ---
 
-### `query_codebase(q, k, hop, rels, max_nodes, min_score, max_per_module, rerank_mode, ...)`
+### `query(q, k, hop, rels, max_nodes, min_score, max_per_module, rerank_mode, ...)`
 
 Hybrid semantic + structural query. Returns ranked nodes and edges.
 
@@ -118,24 +129,23 @@ Hybrid semantic + structural query. Returns ranked nodes and edges.
 | `q` | `str` | — | Natural-language query |
 | `k` | `int` | `8` | Semantic seed count (top-K from vector search) |
 | `hop` | `int` | `1` | Graph expansion hops from each seed |
-| `rels` | `str` | `"CONTAINS,CALLS,IMPORTS,INHERITS,IMPLEMENTS,EXTENDS"` | Comma-separated edge types to follow |
+| `rels` | `list[str]` | all six | Edge types to follow, e.g. `["CALLS", "IMPLEMENTS"]`; omit for CONTAINS, CALLS, IMPORTS, INHERITS, IMPLEMENTS, EXTENDS |
 | `max_nodes` | `int` | `25` | Maximum nodes to return |
 | `min_score` | `float` | `0.0` | Minimum seed score in `[0, 1]` |
 | `max_per_module` | `int` | `3` | Maximum returned nodes per module (`0` disables the cap) |
 | `rerank_mode` | `str` | `"hybrid"` | `hybrid` (70% vector + 30% lexical), `semantic`, or `legacy` |
 | `rerank_semantic_weight` | `float` | `0.7` | Semantic weight for `hybrid` mode |
 | `rerank_lexical_weight` | `float` | `0.3` | Lexical weight for `hybrid` mode |
-| `format` | `str` | `"json"` | `json` (full relevance metadata) or `markdown` (compact ranked table) |
 
-**Returns:** JSON with keys: `query`, `seeds`, `expanded_nodes`, `returned_nodes`, `hop`, `rels`, `nodes`, `edges` — or a Markdown ranking table when `format="markdown"`.
+**Returns:** JSON with keys: `query`, `seeds`, `expanded_nodes`, `returned_nodes`, `hop`, `rels`, `nodes`, `edges`.
 
 ---
 
-### `pack_snippets(q, k, hop, rels, context, max_lines, max_nodes, min_score, max_per_module, rerank_mode, ...)`
+### `pack(q, k, hop, rels, context, max_lines, max_nodes, min_score, max_per_module, rerank_mode, ...)`
 
 Hybrid query + source-grounded snippet extraction. Returns a Markdown context pack.
 
-**When to use:** Any time you need to read actual source code — understanding an implementation, debugging, writing tests, reviewing logic. **Prefer this over `query_codebase` when implementation details matter.**
+**When to use:** Any time you need to read actual source code — understanding an implementation, debugging, writing tests, reviewing logic. **Prefer this over `query` when implementation details matter.**
 
 **Parameters:**
 
@@ -144,7 +154,7 @@ Hybrid query + source-grounded snippet extraction. Returns a Markdown context pa
 | `q` | `str` | — | Natural-language query |
 | `k` | `int` | `8` | Semantic seed count |
 | `hop` | `int` | `1` | Graph expansion hops |
-| `rels` | `str` | `"CONTAINS,CALLS,IMPORTS,INHERITS,IMPLEMENTS,EXTENDS"` | Edge types to follow |
+| `rels` | `list[str]` | all six | Edge types to follow; omit for all six |
 | `context` | `int` | `5` | Extra context lines around each definition |
 | `max_lines` | `int` | `60` | Maximum lines per snippet block |
 | `max_nodes` | `int` | `15` | Maximum nodes in the pack |
@@ -156,18 +166,17 @@ Hybrid query + source-grounded snippet extraction. Returns a Markdown context pa
 
 ---
 
-### `get_node(node_id, include_edges)`
+### `get_node(node_id)`
 
-Fetch a single node by its stable ID, optionally including its immediate neighborhood.
+Fetch a single node by its stable ID.
 
-**When to use:** You have a node ID from a previous query result and want its full metadata. Pass `include_edges=True` to get outgoing edges and incoming callers in one call, avoiding a separate `callers()` round-trip.
+**When to use:** You have a node ID from a previous query result and want its full metadata. Follow with `neighbors(node_id)` for its edges.
 
 **Parameters:**
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `node_id` | `str` | — | Stable node ID, e.g. `cls:src/auth/middleware.ts:AuthMiddleware` |
-| `include_edges` | `bool` | `false` | If `true`, attach outgoing edges (by relation type) and incoming callers |
 
 **Node ID format:** `<kind>:<module_path>:<qualname>`
 
@@ -183,8 +192,26 @@ Fetch a single node by its stable ID, optionally including its immediate neighbo
 | `meth:` | method |
 | `sym:` | unresolved external import stub |
 
-**Returns:** Markdown node summary (module, location, ID, JSDoc), or a "Node Not Found" message.\
-When `include_edges=True`: also includes outgoing edges grouped by relation type and an "Incoming Calls" list of caller nodes.
+**Returns:** JSON with the node's id, kind, name, qualname, module path, line span and JSDoc. An unknown ID is a tool error ("no node with id ...").
+
+---
+
+### `neighbors(node_id, rels, direction, limit)`
+
+A node's one-hop neighborhood: its edges and the nodes at their far ends. Replaces `get_node(include_edges=True)`.
+
+**When to use:** After `get_node`, to see what a node contains, calls, imports, implements or extends, and what points at it. Reads the graph only, so it never loads the embedding model.
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `node_id` | `str` | — | Stable node ID |
+| `rels` | `list[str]` | all | Edge types to follow, e.g. `["CALLS"]`; omit for every relation |
+| `direction` | `str` | `"both"` | `"out"` (edges from the node), `"in"` (edges to it) or `"both"` |
+| `limit` | `int` | `50` | Most edges to return (1-500) |
+
+**Returns:** JSON with the node, its edges and the far-end nodes. An unknown ID is a tool error. For callers resolved through `sym:` import stubs, use `callers(node_id)`.
 
 ---
 
@@ -243,7 +270,7 @@ Reverse-resolve a `(file, line)` pair to the innermost node spanning that locati
 
 Find all callers of a specific node by inverting a relation — fan-in analysis.
 
-**When to use:** Finding all callers of a specific function/method/class. More precise than `query_codebase` for this use case because it resolves cross-module callers through `sym:` import stubs.
+**When to use:** Finding all callers of a specific function/method/class. More precise than `query` for this use case because it resolves cross-module callers through `sym:` import stubs.
 
 **Parameters:**
 
@@ -276,7 +303,7 @@ Find all callers of a specific node by inverting a relation — fan-in analysis.
 
 Return a natural-language Markdown explanation of a single code node.
 
-**When to use:** You want to understand what a specific function, method, class, or interface does — its role, who calls it, what it calls — without reading the raw source. Use as the first step when a user asks about a specific node before reaching for `pack_snippets`.
+**When to use:** You want to understand what a specific function, method, class, or interface does — its role, who calls it, what it calls — without reading the raw source. Use as the first step when a user asks about a specific node before reaching for `pack`.
 
 **Parameters:**
 
@@ -372,7 +399,7 @@ Compute global weighted CodeRank (PageRank) over the repository graph.
 
 ### `query_ranked(q, mode, k, top, rels, radius, exclude_tests)`
 
-Rank query results using CodeRank-enhanced hybrid or personalized PageRank — a more explainable alternative to `query_codebase` when you care *why* a result ranked highly.
+Rank query results using CodeRank-enhanced hybrid or personalized PageRank — a more explainable alternative to `query` when you care *why* a result ranked highly.
 
 **When to use:** Search where ranking transparency matters. Two modes:
 
@@ -480,9 +507,9 @@ Compare two codebase metric snapshots side-by-side.
 | Narrow, precise lookup | `k=4, hop=0` — seeds only, no expansion |
 | Standard exploration | `k=8, hop=1` — default; good for most queries |
 | Broad context sweep | `k=12, hop=2` — pulls in more of the call graph |
-| Deep dependency trace | `k=8, hop=2, rels="CALLS,IMPORTS"` — follow execution paths |
+| Deep dependency trace | `k=8, hop=2, rels=["CALLS", "IMPORTS"]` — follow execution paths |
 
-Higher `hop` values expand the result set geometrically. Use `max_nodes` in `pack_snippets` to keep output manageable.
+Higher `hop` values expand the result set geometrically. Use `max_nodes` in `pack` to keep output manageable.
 
 ### Choosing `rels`
 
@@ -498,22 +525,23 @@ Higher `hop` values expand the result set geometrically. Use `max_nodes` in `pac
 ### Typical agent workflow
 
 ```
-1. graph_stats()
+1. stats()
    → understand codebase size and shape
 
-2. query_codebase("authentication middleware", k=8, hop=1)
+2. query("authentication middleware", k=8, hop=1)
    → identify relevant classes and functions, note their IDs
 
 3. explain("cls:src/auth/middleware.ts:AuthMiddleware")
    → natural-language orientation before reading source
 
-4. pack_snippets("JWT token validation", k=6, hop=1)
+4. pack("JWT token validation", k=6, hop=1)
    → read the actual implementation
 
-5. get_node("meth:src/auth/middleware.ts:AuthMiddleware.verify", include_edges=True)
-   → fetch node metadata + outgoing edges + incoming callers in one call
+5. get_node("meth:src/auth/middleware.ts:AuthMiddleware.verify")
+   neighbors("meth:src/auth/middleware.ts:AuthMiddleware.verify")
+   -> fetch node metadata, then its edges and the nodes at their far ends
 
-6. pack_snippets("token validation error handling", k=4, hop=2, rels="CALLS")
+6. pack("token validation error handling", k=4, hop=2, rels=["CALLS"])
    → follow the call graph deeper into error paths
 
 7. snapshot_list()
@@ -529,7 +557,7 @@ Higher `hop` values expand the result set geometrically. Use `max_nodes` in `pac
 | User asked about a name from a stack trace or chat — no node ID | `find_node(name)` |
 | User pointed at a file and a line number in their editor | `find_definition_at(file, line)` |
 | You need to know "what's actually important in this codebase?" | `centrality()` or `framework_nodes()` |
-| You need explainable search results with score components | `query_ranked(q)` instead of `query_codebase(q)` |
+| You need explainable search results with score components | `query_ranked(q)` instead of `query(q)` |
 | A ranked result surprised you — why did this node rank so high? | `explain_rank(node_id, q)` |
 | You want a persisted CodeRank baseline for dashboards / regression checks | `rank_nodes(persist_metric="coderank_global")` |
 
@@ -539,13 +567,12 @@ Higher `hop` values expand the result set geometrically. Use `max_nodes` in `pac
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Empty results from `query_codebase` | sqlite-vec index missing or stale | `tscodekg build --index-only` |
+| Empty results from `query` | sqlite-vec index missing or stale | `tscodekg build --index-only` |
 | Node IDs in results don't resolve with `get_node` | Graph rebuilt since last query | `tscodekg build`; restart the MCP server |
-| `RuntimeError: TypeScriptKG not initialised` | Server called without `main()` | Always start via `tscodekg mcp` / `tscodekg-mcp` |
 | Snippets show wrong line numbers | Source files changed since build | `tscodekg build` |
 | MCP server not appearing in agent | Wrong/relative paths in MCP config, or agent not restarted | See [INSTALLATION.md § MCP Server Setup](INSTALLATION.md#mcp-server-setup) — all paths must be absolute |
 | `tscodekg` command not found | Package not installed or venv not active | `pip install tscode-kg`, or use the absolute venv path |
-| `WARNING: SQLite database not found` at server start | Graph never built for this repo | `tscodekg build --repo .` first |
+| Session refused with `tscodekg: no graph at ...` | Graph never built for this repo, or `--repo`/`--db` point elsewhere | `tscodekg build --repo .` first, or fix the paths |
 
 For installation, build, and per-agent config issues see [INSTALLATION.md](INSTALLATION.md).
 
@@ -555,10 +582,10 @@ For installation, build, and per-agent config issues see [INSTALLATION.md](INSTA
 
 | Concern | Answer |
 |---|---|
-| What does the MCP server expose? | 19 tools across discovery (`graph_stats`, `query_codebase`, `pack_snippets`, `get_node`, `list_nodes`, `find_node`, `find_definition_at`), relationships (`callers`, `explain`, `analyze_repo`), centrality & ranking (`centrality`, `bridge_centrality`, `framework_nodes`, `rank_nodes`, `query_ranked`, `explain_rank`), and snapshots (`snapshot_list`, `snapshot_show`, `snapshot_diff`) |
+| What does the MCP server expose? | 20 tools across discovery (`stats`, `query`, `pack`, `get_node`, `neighbors`, `list_nodes`, `find_node`, `find_definition_at`), relationships (`callers`, `explain`, `analyze_repo`), centrality & ranking (`centrality`, `bridge_centrality`, `framework_nodes`, `rank_nodes`, `query_ranked`, `explain_rank`), and snapshots (`snapshot_list`, `snapshot_show`, `snapshot_diff`) |
 | What must exist before starting? | `.tscodekg/graph.sqlite` + `.tscodekg/vectors.sqlite` |
 | How do I build those? | `tscodekg build` (or `--graph-only` then `--index-only`) — see [INSTALLATION.md](INSTALLATION.md) |
-| Is the server stateful? | Yes — one `TypeScriptKG` instance per server process |
+| Is the server stateful? | Yes — one `TypeScriptKG` instance per client session, opened when the session starts and closed when it ends |
 | Can it modify the graph? | No — strictly read-only |
-| Which tool should I call first? | `graph_stats()` for orientation |
+| Which tool should I call first? | `stats()` for orientation |
 | How do I automate setup? | `tscodekg init --repo .` — see [INSTALLATION.md](INSTALLATION.md) |

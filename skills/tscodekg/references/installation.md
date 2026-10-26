@@ -107,10 +107,13 @@ Skip the installed hook for a single commit: `TSCODEKG_SKIP_SNAPSHOT=1 git commi
 | Flag | Default | Description |
 |---|---|---|
 | `--repo` | `.` | Repository root |
-| `--db` | `.tscodekg/graph.sqlite` | SQLite graph path |
-| `--vectors` | `.tscodekg/vectors.sqlite` | sqlite-vec store path |
+| `--db` | `.tscodekg/graph.sqlite` | SQLite graph path; a relative path is taken from `--repo` |
+| `--vectors` | `.tscodekg/vectors.sqlite` | sqlite-vec store path; a relative path is taken from `--repo` |
 | `--model` | shared kg_utils default | Sentence-transformer model name |
-| `--transport` | `stdio` | `stdio` or `sse` |
+| `--transport` | `stdio` | `stdio` or `streamable-http` |
+| `--host` | `127.0.0.1` | streamable-http bind address |
+| `--port` | `8765` | streamable-http port |
+| `--manifest` | off | Print the tool list as JSON and exit, without opening the graph |
 
 ### Script aliases
 
@@ -268,9 +271,8 @@ sqlite3 .tscodekg/graph.sqlite "SELECT COUNT(*) FROM nodes; SELECT COUNT(*) FROM
 | Symptom | Cause | Fix |
 |---|---|---|
 | `ModuleNotFoundError: No module named 'mcp'` | Incomplete install | `pip install tscode-kg` |
-| `WARNING: SQLite database not found` | Graph not built | `tscodekg build --repo .` |
-| Empty results from `query_codebase` | Vector store stale or missing | `tscodekg build --repo . --index-only` |
-| `RuntimeError: TypeScriptKG not initialised` | Server not started via CLI | Always start with `tscodekg mcp` / `tscodekg-mcp --repo ...` |
+| Session refused: `tscodekg: no graph at ...` | Graph not built, or `--repo`/`--db` point elsewhere | `tscodekg build --repo .` |
+| Empty results from `query` | Vector store stale or missing | `tscodekg build --repo . --index-only` |
 | Snippets show wrong line numbers | Source changed since build | `tscodekg build --repo .` |
 | MCP server not in Claude Code / Kilo Code | Relative paths or wrong location | Absolute paths in `.mcp.json` (project root); restart |
 | MCP server not in GitHub Copilot | Missing `"type": "stdio"` or wrong key | Use `"servers"` key with `"type": "stdio"` in `.vscode/mcp.json`; click Trust |

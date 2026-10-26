@@ -130,11 +130,13 @@ Run a quick end-to-end test to confirm the full pipeline works before configurin
    cd "$REPO_ROOT" && $RUNNER tscodekg query "module structure"
    ```
 
-3. Verify the MCP server starts and announces its config (Ctrl-C after the banner):
+3. Verify the MCP server lists its tools and serves the graph:
    ```bash
-   cd "$REPO_ROOT" && timeout 10 $RUNNER tscodekg mcp --repo "$REPO_ROOT" </dev/null || true
-   # Expect stderr banner: "TypeScriptKG MCP server starting" with repo/db/vectors/model/transport
-   # and NO "WARNING: SQLite database not found"
+   $RUNNER tscodekg mcp --repo "$REPO_ROOT" --manifest | head -20
+   # Expect JSON naming the tscodekg server, kind "code", and 20 tools
+   timeout 10 $RUNNER tscodekg mcp --repo "$REPO_ROOT" </dev/null || true
+   # Expect stderr: "tscodekg MCP server starting (stdio)", then "tscodekg: serving"
+   # with repo/db/vectors/model, and NO "tscodekg: no graph at ..."
    ```
 
 4. If any command errors, diagnose and report the issue before proceeding.
@@ -143,7 +145,7 @@ Run a quick end-to-end test to confirm the full pipeline works before configurin
 
 ## Step 4: Configure MCP Clients
 
-The TypeScriptKG MCP server is started with `tscodekg mcp --repo <REPO_ROOT>` (transport `stdio` by default; `--transport sse` for HTTP clients). Always use absolute paths.
+The TypeScriptKG MCP server is started with `tscodekg mcp --repo <REPO_ROOT>` (transport `stdio` by default; `--transport streamable-http` for HTTP clients). Always use absolute paths.
 
 ### MCP config by agent — quick reference
 
@@ -236,10 +238,11 @@ Present a summary of everything that was done:
 Restart Claude Code / Claude Desktop to activate the tscodekg MCP server.
 
 Available tools once active:
-  • graph_stats()                — codebase size and shape
-  • query_codebase(q)            — semantic + structural exploration
-  • pack_snippets(q)             — source-grounded code snippets
-  • get_node(node_id)            — single node metadata + neighborhood
+  • stats()                — codebase size and shape
+  • query(q)            — semantic + structural exploration
+  • pack(q)             — source-grounded code snippets
+  • get_node(node_id)            -- single node metadata
+  • neighbors(node_id)           -- one-hop edges and neighboring nodes
   • list_nodes(module_path, kind) — enumerate nodes in a module
   • find_node(name, kind)        — locate nodes by name
   • find_definition_at(path, line) — definition at a file:line position
@@ -252,7 +255,7 @@ Available tools once active:
   • snapshot_list / snapshot_show / snapshot_diff — temporal tracking
 
 Suggested first query after restart:
-  graph_stats()
+  stats()
 ```
 
 ---
@@ -271,7 +274,7 @@ Suggested first query after restart:
 | `tscodekg: command not found` | `pip install tscode-kg` or use the absolute venv binary |
 | `Current Python version is not allowed by the project` | Use `.venv/bin/tscodekg` directly instead of `poetry run tscodekg` |
 | `ModuleNotFoundError: No module named 'mcp'` | Install the extra: `pip install tscode-kg` |
-| `WARNING: SQLite database not found` | Run `tscodekg build --repo "$REPO_ROOT"` first |
+| Session refused: `tscodekg: no graph at ...` | Run `tscodekg build --repo "$REPO_ROOT"` first |
 | Empty query results | `tscodekg build --repo "$REPO_ROOT" --index-only` |
 | Server not appearing in Claude Code | Absolute binary path in `.mcp.json`; restart Claude Code |
 | `Command not found` in VS Code MCP log | Extension host doesn't inherit shell PATH — use the absolute binary path |

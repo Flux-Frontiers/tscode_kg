@@ -289,10 +289,15 @@ Use **absolute paths** — Claude Desktop does not inherit your shell's working 
 | Flag | Default | Description |
 |---|---|---|
 | `--repo` | `.` | Repository root directory |
-| `--db` | `.tscodekg/graph.sqlite` | SQLite knowledge graph path |
-| `--vectors` | `.tscodekg/vectors.sqlite` | sqlite-vec vector store path |
+| `--db` | `.tscodekg/graph.sqlite` | SQLite knowledge graph path; a relative path is taken from `--repo` |
+| `--vectors` | `.tscodekg/vectors.sqlite` | sqlite-vec vector store path; a relative path is taken from `--repo` |
 | `--model` | shared `kg_utils` default | Sentence-transformer model name |
-| `--transport` | `stdio` | MCP transport: `stdio` or `sse` |
+| `--transport` | `stdio` | MCP transport: `stdio` or `streamable-http` |
+| `--host` | `127.0.0.1` | streamable-http bind address |
+| `--port` | `8765` | streamable-http port |
+| `--manifest` | off | Print the tool list as JSON and exit, without opening the graph |
+
+A repository with no graph is refused at session start (`tscodekg: no graph at ...`) instead of being served empty.
 
 ### Restarting agents after MCP setup
 

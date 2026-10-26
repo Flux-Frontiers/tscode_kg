@@ -10,10 +10,11 @@ A practical reference for the TypeScriptKG MCP tools, with generic TypeScript/Ja
 
 | Tool | Best for | Returns |
 |---|---|---|
-| `graph_stats()` | Orientation — size and shape of the graph | Markdown: node/edge counts by kind |
-| `query_codebase(q, k, hop, rels, ...)` | Structural exploration — *what exists, how things relate* | JSON: ranked nodes + edges |
-| `pack_snippets(q, k, hop, ...)` | Implementation detail — *actual source code* | Markdown: snippets with line numbers |
-| `get_node(node_id, include_edges)` | Pinpoint lookup — one node by stable ID + optional neighborhood | Full node metadata |
+| `stats()` | Orientation — size and shape of the graph | JSON: node/edge counts by kind |
+| `query(q, k, hop, rels, ...)` | Structural exploration — *what exists, how things relate* | JSON: ranked nodes + edges |
+| `pack(q, k, hop, ...)` | Implementation detail — *actual source code* | Markdown: snippets with line numbers |
+| `get_node(node_id)` | Pinpoint lookup — one node by stable ID | JSON: full node metadata |
+| `neighbors(node_id, rels, direction, limit)` | Immediate neighborhood -- a node's edges and far-end nodes | JSON: node, edges, nodes |
 | `list_nodes(module_path, kind)` | Enumerate nodes in a module filtered by kind | JSON: matching nodes |
 | `find_node(name, kind)` | Locate a node when you only know its name | JSON: matching nodes |
 | `find_definition_at(path, line)` | IDE-style "go to definition" for a file:line position | The enclosing definition node |
@@ -37,80 +38,80 @@ A practical reference for the TypeScriptKG MCP tools, with generic TypeScript/Ja
 
 ---
 
-## 1. Orient First with `graph_stats`
+## 1. Orient First with `stats`
 
 Always start here when approaching an unfamiliar codebase or after a rebuild.
 
 ```python
-graph_stats()
+stats()
 ```
 
 Returns counts broken down by node kind (`module`, `class`, `interface`, `type_alias`, `enum`, `namespace`, `function`, `method`) and edge relation (`CALLS`, `IMPORTS`, `CONTAINS`, `INHERITS`, `IMPLEMENTS`, `EXTENDS`, `RESOLVES_TO`). High `CALLS` counts mean a rich call graph; many `sym:` nodes mean lots of external / unresolved imports.
 
 ---
 
-## 2. Semantic Exploration with `query_codebase`
+## 2. Semantic Exploration with `query`
 
 Returns a ranked set of nodes and the edges between them. Good for mapping unknown territory.
 
 ```python
 # Find classes and their methods — no filenames needed
-query_codebase("authentication middleware session handling")
+query("authentication middleware session handling")
 
 # Trace a call chain
-query_codebase("request routing dispatch", rels="CALLS")
+query("request routing dispatch", rels=["CALLS"])
 
 # Explore the module import graph
-query_codebase("module imports dependencies", rels="IMPORTS")
+query("module imports dependencies", rels=["IMPORTS"])
 
 # Find interface implementations
-query_codebase("repository interface data access", rels="IMPLEMENTS")
+query("repository interface data access", rels=["IMPLEMENTS"])
 
 # Follow interface hierarchies
-query_codebase("base props component interface", rels="EXTENDS")
+query("base props component interface", rels=["EXTENDS"])
 
 # Combine edge types
-query_codebase("build pipeline bundler", rels="CALLS,IMPORTS")
+query("build pipeline bundler", rels=["CALLS", "IMPORTS"])
 
 # Increase graph depth
-query_codebase("error handling exception", hop=2)
+query("error handling exception", hop=2)
 
 # Filter weak semantic seeds
-query_codebase("error handling", min_score=0.25)
+query("error handling", min_score=0.25)
 
 # Keep module diversity
-query_codebase("state management", max_per_module=2)
+query("state management", max_per_module=2)
 ```
 
 ---
 
-## 3. Source Retrieval with `pack_snippets`
+## 3. Source Retrieval with `pack`
 
 Returns Markdown with actual source snippets, ranked and deduplicated. Use this when you need to *read* the code, not just locate it.
 
 ```python
 # Understand an implementation
-pack_snippets("JWT token validation refresh")
+pack("JWT token validation refresh")
 
 # Limit result count
-pack_snippets("graph traversal hop expansion", max_nodes=5)
+pack("graph traversal hop expansion", max_nodes=5)
 
 # Widen the snippet window (lines of context around each definition)
-pack_snippets("schema definition zod validation", context=15)
+pack("schema definition zod validation", context=15)
 
 # Cap snippet length
-pack_snippets("render component tree", max_lines=40)
+pack("render component tree", max_lines=40)
 
 # Raise semantic seeds when first results feel off-target
-pack_snippets("websocket reconnect backoff", k=12)
+pack("websocket reconnect backoff", k=12)
 
 # Tighten noisy packs
-pack_snippets("query ranking", min_score=0.2, max_per_module=1)
+pack("query ranking", min_score=0.2, max_per_module=1)
 ```
 
 ---
 
-## 4. Pinpoint Lookup with `get_node`, `find_node`, `find_definition_at`
+## 4. Pinpoint Lookup with `get_node`, `neighbors`, `find_node`, `find_definition_at`
 
 ### Node ID format
 
@@ -131,8 +132,9 @@ mod:src/index.ts
 # Fetch a function (lineno, end_lineno, JSDoc, module_path, qualname)
 get_node("fn:src/utils/helpers.ts:formatDate")
 
-# Fetch with immediate neighborhood — outgoing edges + incoming callers in one call
-get_node("cls:src/auth/middleware.ts:AuthMiddleware", include_edges=True)
+# Its immediate neighborhood: edges and the nodes at their far ends
+neighbors("cls:src/auth/middleware.ts:AuthMiddleware")
+neighbors("cls:src/auth/middleware.ts:AuthMiddleware", rels=["IMPLEMENTS"], direction="out")
 
 # When you only know the name
 find_node("AuthMiddleware")
@@ -244,20 +246,20 @@ snapshot_diff("abc1234", "def5678") # metrics for both + computed delta
 
 ## 10. Parameter Quick Reference
 
-### `query_codebase` and `pack_snippets` shared params
+### `query` and `pack` shared params
 
 | Parameter | Default | Effect |
 |---|---|---|
 | `q` | *(required)* | Natural-language query |
 | `k` | `8` | Semantic seed nodes before expansion |
 | `hop` | `1` | Graph expansion hops from each seed |
-| `rels` | `"CONTAINS,CALLS,IMPORTS,INHERITS"` | Edge types to traverse (add `IMPLEMENTS,EXTENDS` for TS type structure) |
+| `rels` | all six | Edge types to traverse, as a list (`["CALLS", "IMPORTS"]`); omit for CONTAINS, CALLS, IMPORTS, INHERITS, IMPLEMENTS, EXTENDS |
 | `max_nodes` | `25` / `15` | Cap returned nodes |
 | `min_score` | unset | Filter low-similarity seeds before expansion |
 | `max_per_module` | unset | Cap nodes per module for diversity |
 | `rerank_mode` | `hybrid` | `hybrid`, `semantic`, or `legacy` |
 
-### `pack_snippets` only
+### `pack` only
 
 | Parameter | Default | Effect |
 |---|---|---|
@@ -270,13 +272,13 @@ snapshot_diff("abc1234", "def5678") # metrics for both + computed delta
 
 ```python
 # "How does X work?"
-pack_snippets("X concept or class name")
+pack("X concept or class name")
 
 # "What calls Y?"
 callers("fn:src/path/file.ts:Y")
 
 # "What does module Z import?"
-query_codebase("module Z name", rels="IMPORTS")
+query("module Z name", rels=["IMPORTS"])
 
 # "Find all subclasses of Base"
 callers("cls:src/base.ts:Base", rel="INHERITS")
@@ -285,7 +287,7 @@ callers("cls:src/base.ts:Base", rel="INHERITS")
 callers("iface:src/types/repo.ts:Repository", rel="IMPLEMENTS")
 
 # "Show me the full structure of this module"
-query_codebase("module name", rels="CONTAINS", hop=2)
+query("module name", rels=["CONTAINS"], hop=2)
 
 # "Get me the source for function F"
 find_node("F", kind="function")     # step 1: find the node ID

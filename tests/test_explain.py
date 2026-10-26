@@ -73,13 +73,13 @@ def test_render_explain_uses_snippets_hint(tmp_path):
     kg = _make_kg(tmp_path, "export function foo(): void {}\n")
     fn_id = _node_id_by_name(kg, "function", "foo")
 
-    md_mcp = render_explain(kg, fn_id, snippets_hint="pack_snippets()")
+    md_mcp = render_explain(kg, fn_id, snippets_hint="pack()")
     md_cli = render_explain(kg, fn_id, snippets_hint="tscodekg pack")
 
-    assert "pack_snippets()" in md_mcp
+    assert "pack()" in md_mcp
     assert "tscodekg pack" not in md_mcp
     assert "tscodekg pack" in md_cli
-    assert "pack_snippets()" not in md_cli
+    assert "pack()" not in md_cli
     kg.close()
 
 

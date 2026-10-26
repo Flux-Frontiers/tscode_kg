@@ -93,10 +93,13 @@ are equivalent.
 ## MCP tools
 
 The MCP server exposes the full PyCodeKG toolkit, applied to TypeScript/JavaScript
-codebases: `graph_stats`, `query_codebase`, `pack_snippets`, `callers`, `get_node`,
-`list_nodes`, `find_node`, `centrality`, `bridge_centrality`, `framework_nodes`,
-`find_definition_at`, `analyze_repo`, `explain`, `rank_nodes`, `query_ranked`,
-`explain_rank`, `snapshot_list`, `snapshot_show`, and `snapshot_diff`.
+codebases, as 20 tools. The first five are the fleet's canonical tools, named the
+same on every KG server: `stats`, `query`, `pack`, `get_node` and `neighbors`.
+The other fifteen are TypeScriptKG's own: `callers`, `list_nodes`, `find_node`,
+`centrality`, `bridge_centrality`, `framework_nodes`, `find_definition_at`,
+`analyze_repo`, `explain`, `rank_nodes`, `query_ranked`, `explain_rank`,
+`snapshot_list`, `snapshot_show`, and `snapshot_diff`. `tscodekg mcp --manifest`
+prints the live list as JSON without opening the graph.
 
 See `docs/MCP.md` for setup and `docs/CHEATSHEET.md` for a query cookbook.
 Repo-local Claude Code skills live in `skills/`.

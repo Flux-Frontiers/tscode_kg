@@ -41,10 +41,11 @@ Always use these first — they're faster and source-grounded:
 
 | Tool | Purpose | Example |
 |------|---------|---------|
-| `graph_stats` | View node/edge counts by kind/relation | Understand graph structure |
-| `query_codebase(q, k, hop, rels, max_nodes, min_score, max_per_module)` | Hybrid semantic + structural query with precision/diversity controls | "authentication middleware" |
-| `pack_snippets(q, k, hop, ...)` | Extract source-grounded code snippets | Get relevant code for LLM analysis |
+| `stats` | View node/edge counts by kind/relation | Understand graph structure |
+| `query(q, k, hop, rels, max_nodes, min_score, max_per_module)` | Hybrid semantic + structural query with precision/diversity controls | "authentication middleware" |
+| `pack(q, k, hop, ...)` | Extract source-grounded code snippets | Get relevant code for LLM analysis |
 | `get_node(node_id)` | Fetch a single node by stable ID | Precise node lookup |
+| `neighbors(node_id, rels, direction, limit)` | A node's one-hop edges and the nodes at their far ends | Immediate neighborhood |
 | `callers(node_id, rel)` | Find all callers of a function, resolving cross-module `sym:` stubs | Understand call graph |
 | `centrality(top, kinds, group_by)` | SIR PageRank — rank nodes or modules by structural importance | Identify hotspots before refactoring |
 | `bridge_centrality(top)` | Module connectivity — orchestrator/hub modules | Understand coupling |
@@ -118,7 +119,7 @@ Repo-local Codex skills live in `skills/` (this repo does not commit `.Codex/`):
 | `tscodekg` | Install, configure, and use the TypeScriptKG MCP server and CLI |
 | `tscodekg-thorough-analysis` | Run and interpret `tscodekg analyze` |
 | `setup-tscodekg-mcp` | Wire up `.mcp.json` / IDE configs and verify the server |
-| `sync-mcp-docs` | Keep MCP docstrings and instructions in sync (required rule below) |
+| `sync-mcp-docs` | Sync the docs and skills to `tscodekg mcp --manifest` (required rule below) |
 | `changelog-commit` | Keep-a-Changelog commit workflow |
 | `release` | Version bump, changelog, tag, GitHub Release |
 
@@ -131,9 +132,10 @@ All plans, roadmaps, and task breakdowns MUST omit time estimates. Use phases, p
 
 - Prefer `:param:` style docstrings
 
-### MCP Instruction Sync (Required)
-- Any change to MCP tool signatures, parameters, defaults, or behavior in `src/tscode_kg/mcp_server.py` must include a matching update to the `mcp = FastMCP(..., instructions=(...))` tool descriptions in the same commit.
-- Keep the module docstring "Tools" list and the `FastMCP` instructions block aligned with the runtime tool API.
+### MCP Tool Docs (Required)
+- The server is built on `kg_utils.mcp`. Its instructions are generated: the hand-written `PREAMBLE` in `src/tscode_kg/mcp_server.py` followed by one line per tool, taken from each tool's docstring. Nothing lists the tools by hand, so a tool's docstring *is* its documentation: any change to a tool's signature, parameters, defaults or behavior updates its docstring in the same commit.
+- `stats`, `query`, `pack`, `get_node` and `neighbors` are the fleet's canonical tools, the same names on every KG server. `query` and `pack` are TypeScriptKG's richer versions, registered with `server.canonical(...)`, which refuses any change that drops or retypes a canonical parameter. New tools go in `EXTRA_TOOLS`.
+- `tscodekg mcp --manifest` prints the live tool list as JSON; generate tool references from it rather than writing them by hand. `tests/test_mcp_server.py` checks the canonical tools against PyCodeKG's.
 
 ### PyCodeKG Parity
 - TypeScriptKG mirrors PyCodeKG's approach: same MCP tool surface, same CLI conventions, same snapshot/hook workflow, same repo hygiene (pre-commit, detect-secrets, CI). When adding or changing behavior here, check how PyCodeKG does it first and stay consistent unless there is a TS/JS-specific reason to diverge — and document any divergence in the CHANGELOG.
