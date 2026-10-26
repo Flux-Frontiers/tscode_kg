@@ -1,35 +1,35 @@
 """
-cli/cmd_mcp.py — tscodekg mcp command: launch the MCP server.
+cli/cmd_mcp.py -- ``tscodekg mcp``, the fleet's standard MCP command, from :mod:`kg_utils.mcp`:
+
+    tscodekg mcp [--repo DIR] [--db FILE] [--vectors FILE] [--model NAME]
+                 [--transport stdio|streamable-http] [--host H] [--port N]
+                 [--manifest]
+
+``cli/main.py`` registers it with ``add_mcp_command(cli, build_mcp_server)``.
+Registering it imports neither ``mcp`` nor the server module, so every other
+``tscodekg`` command starts as fast as before.
 """
 
 from __future__ import annotations
 
-import click
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from kg_utils.mcp import KGServer
 
 
-@click.command("mcp")
-@click.option("--repo", default=".", show_default=True, help="Repository root.")
-@click.option(
-    "--db",
-    default=".tscodekg/graph.sqlite",
-    show_default=True,
-    help="SQLite database path.",
-)
-@click.option(
-    "--vectors",
-    default=".tscodekg/vectors.sqlite",
-    show_default=True,
-    help="sqlite-vec store path.",
-)
-@click.option(
-    "--transport",
-    default="stdio",
-    show_default=True,
-    type=click.Choice(["stdio", "sse"]),
-    help="MCP transport.",
-)
-def mcp_cmd(repo: str, db: str, vectors: str, transport: str) -> None:
-    """Launch the TypeScriptKG MCP server."""
-    from tscode_kg.mcp_server import main  # pylint: disable=import-outside-toplevel
+def build_mcp_server(
+    repo: Path, db: Path | None, vectors: Path | None, model: str | None
+) -> KGServer:
+    """Build the server only when ``tscodekg mcp`` runs.
 
-    main(["--repo", repo, "--db", db, "--vectors", vectors, "--transport", transport])
+    :param repo: Repository root, absolute.
+    :param db: Graph database, absolute; ``None`` for the default.
+    :param vectors: Vector store, absolute; ``None`` for the default.
+    :param model: Embedding model; ``None`` for the default.
+    :return: The server, with its graph not yet opened.
+    """
+    from tscode_kg.mcp_server import build_server  # noqa: PLC0415 -- see the module docstring
+
+    return build_server(repo, db, vectors, model)

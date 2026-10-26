@@ -78,7 +78,7 @@ Alternatively, from an MCP session simply call `analyze_repo()` — same analysi
 | **SIR centrality** | Independent structural-importance ranking; agreement with CodeRank strengthens the signal |
 | **Orphans** | Dead-code candidates — but TS entry points (e.g. `index.ts`, CLI mains, exported components) are excluded/flagged, not every zero-caller node is dead |
 | **Module coupling** | High cross-module CALLS + IMPORTS with low cohesion = tight coupling; candidates for boundary cleanup |
-| **JSDoc coverage** | Directly determines semantic retrieval quality: good coverage → strong `query_codebase`/`pack_snippets` results; low coverage → degraded semantic queries |
+| **JSDoc coverage** | Directly determines semantic retrieval quality: good coverage → strong `query`/`pack` results; low coverage → degraded semantic queries |
 | **Hierarchy depth** | Deep INHERITS/EXTENDS chains signal fragile base-class problems |
 | **Quality grade** | A/B = healthy; C = act on top warnings; D/F = structural work needed before feature work |
 

@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-26
+
+### Changed
+
+- **The MCP server is built on the fleet's shared base, `kg_utils.mcp`.**
+  Step 2 of `kgrag_priv/docs/MCP_CENTRALIZATION_PLAN.md` (sweep item 93), the
+  same port PyCodeKG made in step 1. **Breaking for agents and configs:** four
+  tools take the fleet's canonical names, the same on every KG server, with no
+  aliases (decided by EGS 2026-10-25): `graph_stats` is `stats`,
+  `query_codebase` is `query`, `pack_snippets` is `pack`, and
+  `get_node(include_edges=True)` is `get_node` followed by the new
+  `neighbors(node_id, rels, direction, limit)`. The server now has 20 tools:
+  the five canonical ones first, then TypeScriptKG's 15, unchanged apart from
+  how they reach the graph. A test checks the canonical tools' names, order
+  and shared parameter schemas against PyCodeKG's.
+- **`query` and `pack` keep TypeScriptKG's richer search:** hybrid reranking
+  by default, the per-module cap, and IMPLEMENTS and EXTENDS among the default
+  relations. Two changes: `rels` takes a list (`["CALLS"]`) instead of a
+  comma-separated string, and `query` returns structured JSON only, so its
+  `format="markdown"` option is gone. `stats` and `get_node` return JSON
+  rather than Markdown, with the same content.
+- **`tscodekg mcp` is the fleet's standard command:** `--repo`, `--db`,
+  `--vectors`, `--model`, `--transport stdio|streamable-http`, `--host`,
+  `--port`, and `--manifest`, which prints the tool list as JSON without
+  opening the graph. `--transport sse` is gone; it is deprecated in the MCP
+  specification. `tscodekg-mcp` is kept for Claude Desktop and Copilot configs
+  and is now the same command. Registering it does not import `mcp`, so other
+  `tscodekg` commands start as before.
+- **The server opens the graph per session and closes it after**, instead of
+  holding a module-level instance, and refuses a repository with no graph
+  (`tscodekg: no graph at ...`) instead of warning and serving it empty. Under
+  stdio, stray output from a tool or a C library goes to stderr and can no
+  longer corrupt the protocol stream.
+- **The instructions are generated** from a short hand-written preamble and
+  each tool's docstring, so they cannot drift from the tools. CLAUDE.md's and
+  AGENTS.md's instruction-sync rule and the `sync-mcp-docs` skill now say so.
+  The docs and skills use the new names.
+- **`TypeScriptKG.stats()` returns the fleet stats shape** from kgmodule-utils
+  0.29.0: `{"kind": "code", "nodes": {"total", "by_kind"}, "edges": {"total",
+  "by_rel"}}` plus extras (`meaningful_nodes`, `docstring_coverage`, ...).
+  **Breaking for outside readers** of `stats()["total_nodes"]`,
+  `["total_edges"]`, `["node_counts"]` and `["edge_counts"]`. The analysis
+  report flattens it with `kg_utils.stats.flat_stats`, and snapshots record
+  the same flat keys as before.
+
+### Fixed
+
+- **`list_nodes` and `find_node` work as the first call of a session.** They
+  read the lazy store's private `_store` field, which is still `None` before
+  anything opens it, and answered "No database store available". They use
+  the `store` property now, as PyCodeKG does.
+
+**Needs `kgmodule-utils` 0.29.0:** the floor is
+`kgmodule-utils[semantic,sqlite-vec,mcp]>=0.29.0`, and its `[mcp]` extra
+replaces the direct `mcp` pin.
+
 ## [0.7.0] - 2026-09-26
 
 ### Changed

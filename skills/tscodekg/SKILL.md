@@ -1,13 +1,13 @@
 ---
 name: tscodekg
-description: Expert knowledge for installing, configuring, and using the TypeScriptKG MCP server — a hybrid semantic + structural knowledge graph for TypeScript/JavaScript codebases. Use this skill when the user asks about: setting up TypeScriptKG in a project, installing tscode-kg with pip or Poetry (pip install tscode-kg), building the SQLite graph or sqlite-vec vector index, configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the tscodekg CLI (tscodekg init, tscodekg build, tscodekg query, tscodekg pack, tscodekg analyze, tscodekg centrality, tscodekg bridges, tscodekg framework-nodes, tscodekg explain, tscodekg snapshot, tscodekg install-hooks, tscodekg download-model, tscodekg mcp), using the graph_stats / query_codebase / pack_snippets / callers / get_node / list_nodes / find_node / centrality / bridge_centrality / framework_nodes / find_definition_at / analyze_repo / explain / rank_nodes / query_ranked / explain_rank / snapshot_list / snapshot_show / snapshot_diff MCP tools, or troubleshooting TypeScriptKG errors.
+description: Expert knowledge for installing, configuring, and using the TypeScriptKG MCP server — a hybrid semantic + structural knowledge graph for TypeScript/JavaScript codebases. Use this skill when the user asks about: setting up TypeScriptKG in a project, installing tscode-kg with pip or Poetry (pip install tscode-kg), building the SQLite graph or sqlite-vec vector index, configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the tscodekg CLI (tscodekg init, tscodekg build, tscodekg query, tscodekg pack, tscodekg analyze, tscodekg centrality, tscodekg bridges, tscodekg framework-nodes, tscodekg explain, tscodekg snapshot, tscodekg install-hooks, tscodekg download-model, tscodekg mcp), using the stats / query / pack / get_node / neighbors / callers / list_nodes / find_node / centrality / bridge_centrality / framework_nodes / find_definition_at / analyze_repo / explain / rank_nodes / query_ranked / explain_rank / snapshot_list / snapshot_show / snapshot_diff MCP tools, or troubleshooting TypeScriptKG errors.
 ---
 
 # TypeScriptKG Skill
 
 > **Use TypeScriptKG first — before grep, Glob, or file reads.**
 >
-> Grep and file search find text. TypeScriptKG understands code. It knows what calls what, what implements which interface, which modules are imported where, and surfaces the most semantically relevant source snippets in a single query. One `pack_snippets` call replaces five rounds of grep-and-read and gives the agent real structural insight into the codebase — not just line matches.
+> Grep and file search find text. TypeScriptKG understands code. It knows what calls what, what implements which interface, which modules are imported where, and surfaces the most semantically relevant source snippets in a single query. One `pack` call replaces five rounds of grep-and-read and gives the agent real structural insight into the codebase — not just line matches.
 
 TypeScriptKG (package `tscode-kg`, import `tscode_kg`) indexes TypeScript/JavaScript repos into a hybrid knowledge graph (SQLite + sqlite-vec) via tree-sitter AST extraction on the shared kgmodule-utils SDK, and exposes it as MCP tools for AI agents.
 
@@ -103,7 +103,7 @@ Each command is available as `tscodekg <subcommand>` **or** a dedicated `tscodek
 | `snapshot prune` | Remove stale snapshots (`--dry-run`) |
 | `install-hooks` / `tscodekg-install-hooks` | Install pre-commit git hook for automatic snapshots |
 | `download-model` / `tscodekg-download-model` | Pre-download embedding model for offline use |
-| `mcp` / `tscodekg-mcp` | Start MCP server (`--repo`, `--db`, `--vectors`, `--transport` stdio/sse) |
+| `mcp` / `tscodekg-mcp` | Start MCP server (`--repo`, `--db`, `--vectors`, `--model`, `--transport` stdio/streamable-http, `--host`, `--port`, `--manifest`) |
 
 For detailed options: `tscodekg <command> --help`.
 
@@ -206,12 +206,15 @@ Config path: `~/Library/Application Support/Claude/claude_desktop_config.json` (
 
 ## MCP Tools
 
+The first five are the fleet's canonical tools, named the same on every KG server. `tscodekg mcp --manifest` prints the live list as JSON.
+
 | Tool | When to use |
 |---|---|
-| `graph_stats()` | First call — understand codebase size/shape |
-| `query_codebase(q, k, hop, rels, max_nodes, min_score, max_per_module, rerank_mode)` | Explore graph structure, find relevant nodes; tune precision with `min_score`, diversity with `max_per_module` |
-| `pack_snippets(q, k, hop, rels, context, max_lines, ...)` | Read actual source code (prefer over query_codebase) |
-| `get_node(node_id, include_edges)` | Fetch node metadata; `include_edges=True` also returns outgoing edges + incoming callers |
+| `stats()` | First call — understand codebase size/shape |
+| `query(q, k, hop, rels, max_nodes, min_score, max_per_module, rerank_mode)` | Explore graph structure, find relevant nodes; tune precision with `min_score`, diversity with `max_per_module` |
+| `pack(q, k, hop, rels, context, max_lines, ...)` | Read actual source code (prefer over query) |
+| `get_node(node_id)` | Fetch node metadata |
+| `neighbors(node_id, rels, direction, limit)` | A node's one-hop edges and the nodes at their far ends |
 | `list_nodes(module_path, kind)` | List nodes filtered by module path prefix and/or kind |
 | `find_node(name, kind)` | Find nodes by plain name or qualname substring |
 | `find_definition_at(path, line)` | Resolve the definition enclosing a file:line position — IDE-style "go to definition" |
@@ -266,13 +269,13 @@ Structure-aware ranking that blends PageRank with semantic search.
 ### Typical session workflow
 
 ```
-1. graph_stats()                                              → orientation
-2. query_codebase("auth middleware", k=8, hop=1)              → find nodes
+1. stats()                                              → orientation
+2. query("auth middleware", k=8, hop=1)              → find nodes
 3. explain("cls:src/auth/middleware.ts:AuthMiddleware")       → understand before reading
-4. pack_snippets("JWT validation", k=6, hop=1)                → read source
-5. get_node("fn:src/utils/helpers.ts:formatDate", include_edges=True)
-                                                              → node detail + neighborhood in one call
-6. pack_snippets("error handling", k=4, hop=2, rels="CALLS")  → deeper
+4. pack("JWT validation", k=6, hop=1)                → read source
+5. get_node("fn:src/utils/helpers.ts:formatDate")
+   neighbors("fn:src/utils/helpers.ts:formatDate")            -> node detail, then its neighborhood
+6. pack("error handling", k=4, hop=2, rels=["CALLS"])  → deeper
 7. snapshot_list() / snapshot_diff("a", "b")                  → track codebase evolution
 ```
 
@@ -301,18 +304,18 @@ If you want snapshot history in git, un-ignore `.tscodekg/snapshots/` — the pr
 
 ## Key Defaults
 
-- `k=8, hop=1`; default rels: `CONTAINS,CALLS,IMPORTS,INHERITS` (add `IMPLEMENTS,EXTENDS` for TS type structure)
+- `k=8, hop=1`; default rels for `query`/`pack`: CONTAINS, CALLS, IMPORTS, INHERITS, IMPLEMENTS, EXTENDS; `rels` is a list (`["CALLS"]`)
 - Node kinds: `module`, `class`, `interface`, `type_alias`, `enum`, `namespace`, `function`, `method`
 - Node ID format: `<prefix>:<module_path>:<qualname>` — e.g. `cls:src/auth/middleware.ts:AuthMiddleware`, `fn:src/utils/helpers.ts:formatDate`
 - Prefixes: `mod:` module, `cls:` class, `iface:` interface, `type:` type alias, `enum:` enum, `ns:` namespace, `fn:` function, `meth:` method, `sym:` unresolved external symbol
-- Transport: `stdio` (Claude Code/Desktop), `sse` (HTTP clients)
+- Transport: `stdio` (Claude Code/Desktop), `streamable-http` (HTTP clients)
 
 ## Troubleshooting
 
 | Error | Fix |
 |---|---|
 | `ModuleNotFoundError: No module named 'mcp'` | Install the extra: `pip install tscode-kg` |
-| `WARNING: SQLite database not found` | Run `tscodekg build --repo .` first |
+| Session refused: `tscodekg: no graph at ...` | Run `tscodekg build --repo .` first, or point `--repo`/`--db` at the built graph |
 | MCP server not appearing | Use absolute paths in `.mcp.json`; restart Claude Code |
 | Empty query results | Rebuild the index: `tscodekg build --repo . --index-only` |
 | Pre-commit hook slow / unwanted for one commit | `TSCODEKG_SKIP_SNAPSHOT=1 git commit ...` |

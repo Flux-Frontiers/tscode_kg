@@ -38,7 +38,7 @@ packages = [{ include = "tscode_kg", from = "src" }]
 
 [project]
 name = "tscode-kg"
-version = "0.7.0"
+version = "0.8.0"
 description = "Knowledge graph for TypeScript/JavaScript codebases — AST extraction, hybrid semantic+structural search"
 readme = "README.md"
 license = "Elastic-2.0"
@@ -68,15 +68,10 @@ dependencies = [
     # manager is now the package_name class attribute, where it used to be an
     # __init__ that only forwarded to super(). Against 0.19.x the manager
     # reports itself as "kg-utils" in every snapshot's tool field.
-    "kgmodule-utils[semantic,sqlite-vec]>=0.23.0",
+    # 0.29.0: the MCP server is kg_utils.mcp's ([mcp] brings mcp itself),
+    # stats() is the fleet stats shape, and LanceDB is gone.
+    "kgmodule-utils[semantic,sqlite-vec,mcp]>=0.29.0",
     "click>=8.1.0,<9",
-    # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
-    # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
-    # mcp.server around new submodules. src/tscode_kg/mcp_server.py imports
-    # FastMCP from mcp, so an unbounded floor lets a clean install pull 2.x and
-    # break `tscodekg-mcp` at import time. Lift this only alongside a port to
-    # the standalone fastmcp package.
-    "mcp>=1.3.0,<2",
     "networkx>=3.0",
 ]
 

@@ -3,7 +3,7 @@
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
 [![PyPI](https://img.shields.io/pypi/v/tscode-kg.svg)](https://pypi.org/project/tscode-kg/)
-[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/Flux-Frontiers/tscode_kg/releases)
+[![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)](https://github.com/Flux-Frontiers/tscode_kg/releases)
 [![CI](https://github.com/Flux-Frontiers/tscode_kg/actions/workflows/ci.yml/badge.svg)](https://github.com/Flux-Frontiers/tscode_kg/actions/workflows/ci.yml)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22559450-blue.svg)](https://doi.org/10.5281/zenodo.22559450)
@@ -93,10 +93,13 @@ are equivalent.
 ## MCP tools
 
 The MCP server exposes the full PyCodeKG toolkit, applied to TypeScript/JavaScript
-codebases: `graph_stats`, `query_codebase`, `pack_snippets`, `callers`, `get_node`,
-`list_nodes`, `find_node`, `centrality`, `bridge_centrality`, `framework_nodes`,
-`find_definition_at`, `analyze_repo`, `explain`, `rank_nodes`, `query_ranked`,
-`explain_rank`, `snapshot_list`, `snapshot_show`, and `snapshot_diff`.
+codebases, as 20 tools. The first five are the fleet's canonical tools, named the
+same on every KG server: `stats`, `query`, `pack`, `get_node` and `neighbors`.
+The other fifteen are TypeScriptKG's own: `callers`, `list_nodes`, `find_node`,
+`centrality`, `bridge_centrality`, `framework_nodes`, `find_definition_at`,
+`analyze_repo`, `explain`, `rank_nodes`, `query_ranked`, `explain_rank`,
+`snapshot_list`, `snapshot_show`, and `snapshot_diff`. `tscodekg mcp --manifest`
+prints the live list as JSON without opening the graph.
 
 See `docs/MCP.md` for setup and `docs/CHEATSHEET.md` for a query cookbook.
 Repo-local Claude Code skills live in `skills/`.
@@ -156,13 +159,13 @@ If you use TypeScriptKG in your research or project, please cite it:
 
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22559450-blue.svg)](https://doi.org/10.5281/zenodo.22559450)
 
-> Suchanek, E. G. (2026). *TypeScriptKG: Semantic Knowledge Graph for TypeScript/JavaScript Codebases* (Version 0.7.0) [Software]. Flux-Frontiers. https://doi.org/10.5281/zenodo.22559450
+> Suchanek, E. G. (2026). *TypeScriptKG: Semantic Knowledge Graph for TypeScript/JavaScript Codebases* (Version 0.8.0) [Software]. Flux-Frontiers. https://doi.org/10.5281/zenodo.22559450
 
 ```bibtex
 @software{suchanek_tscode_kg,
   author    = {Suchanek, Eric G.},
   title     = {{TypeScriptKG}: Semantic Knowledge Graph for TypeScript/JavaScript Codebases},
-  version   = {0.7.0},
+  version   = {0.8.0},
   year      = {2026},
   publisher = {Flux-Frontiers},
   doi       = {10.5281/zenodo.22559450},

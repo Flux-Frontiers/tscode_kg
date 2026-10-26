@@ -1,20 +1,21 @@
 # TypeScriptKG Query Cheatsheet
 
-A practical reference for the nineteen MCP tools, with examples for TypeScript/JavaScript codebases.
+A practical reference for the twenty MCP tools, with examples for TypeScript/JavaScript codebases.
 All queries below work against a built TypeScriptKG knowledge graph.
 
 ---
 
-## The Nineteen Tools at a Glance
+## The Twenty Tools at a Glance
 
 ### Core Tools
 
 | Tool | Best for | Returns |
 |---|---|---|
-| `graph_stats()` | Orientation — size and shape of the graph | Markdown: node/edge counts by kind |
-| `query_codebase(q)` | Structural exploration — *what exists, how things relate* | JSON: ranked nodes + edges |
-| `pack_snippets(q)` | Implementation detail — *actual source code* | Markdown: snippets with line numbers |
-| `get_node(node_id, include_edges)` | Pinpoint lookup — one node by its stable ID + optional neighborhood | Markdown: full node metadata |
+| `stats()` | Orientation — size and shape of the graph | JSON: node/edge counts by kind |
+| `query(q)` | Structural exploration — *what exists, how things relate* | JSON: ranked nodes + edges |
+| `pack(q)` | Implementation detail — *actual source code* | Markdown: snippets with line numbers |
+| `get_node(node_id)` | Pinpoint lookup — one node by its stable ID | JSON: full node metadata |
+| `neighbors(node_id, rels, direction, limit)` | Immediate neighborhood -- a node's edges and far-end nodes | JSON: node, edges, nodes |
 | `list_nodes(module_path, kind)` | Enumerate all nodes in a module filtered by kind | JSON: array of matching nodes |
 | `find_node(name, kind)` | Search by (partial) name when you don't have the stable ID | JSON: matching node candidates |
 | `find_definition_at(file, line)` | Reverse-lookup the node spanning a `file:line` location | Markdown: same shape as `explain()` |
@@ -38,23 +39,30 @@ All queries below work against a built TypeScriptKG knowledge graph.
 
 ---
 
-## 1. Orient First with `graph_stats`
+## 1. Orient First with `stats`
 
 Always start here when approaching an unfamiliar codebase or after a rebuild.
 
 ```python
-graph_stats()
+stats()
 ```
 
-Returns counts broken down by node kind and edge relation, plus JSDoc coverage.
-For a typical TypeScript repo you'll see something like:
+Returns counts broken down by node kind and edge relation, plus JSDoc coverage, in the
+fleet's stats shape. For a typical TypeScript repo you'll see something like:
 
 ```json
 {
-  "total_nodes": 1240,
-  "total_edges": 2380,
-  "node_counts": { "class": 27, "interface": 64, "type_alias": 41, "enum": 9, "function": 380, "method": 132, "module": 88, "symbol": 499 },
-  "edge_counts": { "CALLS": 1310, "CONTAINS": 653, "IMPORTS": 310, "INHERITS": 18, "IMPLEMENTS": 52, "EXTENDS": 37 }
+  "kind": "code",
+  "nodes": {
+    "total": 1240,
+    "by_kind": { "class": 27, "interface": 64, "type_alias": 41, "enum": 9, "function": 380, "method": 132, "module": 88, "symbol": 499 }
+  },
+  "edges": {
+    "total": 2380,
+    "by_rel": { "CALLS": 1310, "CONTAINS": 653, "IMPORTS": 310, "INHERITS": 18, "IMPLEMENTS": 52, "EXTENDS": 37 }
+  },
+  "meaningful_nodes": 741,
+  "docstring_coverage": 0.58
 }
 ```
 
@@ -62,14 +70,14 @@ High `symbol` counts mean many external package imports were recorded as `sym:` 
 
 ---
 
-## 2. Semantic Exploration with `query_codebase`
+## 2. Semantic Exploration with `query`
 
 Returns a ranked set of nodes and the edges between them. Good for mapping unknown territory.
 
 ### Find classes and their methods
 
 ```python
-query_codebase("knowledge graph storage persistence")
+query("knowledge graph storage persistence")
 ```
 
 Returns the relevant classes and the edges connecting them — no need to know filenames.
@@ -77,27 +85,27 @@ Returns the relevant classes and the edges connecting them — no need to know f
 ### Trace a call chain
 
 ```python
-query_codebase("request pipeline middleware chain", rels="CALLS")
+query("request pipeline middleware chain", rels=["CALLS"])
 ```
 
-`rels=` restricts graph expansion to a single edge type. Set it to `"CALLS"` to follow execution flow only.
+`rels=` restricts graph expansion to a single edge type. Set it to `["CALLS"]` to follow execution flow only.
 
 ### Explore the module import graph
 
 ```python
-query_codebase("module imports dependencies", rels="IMPORTS")
+query("module imports dependencies", rels=["IMPORTS"])
 ```
 
 ### Find inheritance hierarchies
 
 ```python
-query_codebase("base controller abstract class", rels="INHERITS")
+query("base controller abstract class", rels=["INHERITS"])
 ```
 
 ### Find interface implementations
 
 ```python
-query_codebase("storage adapter interface", rels="IMPLEMENTS")
+query("storage adapter interface", rels=["IMPLEMENTS"])
 ```
 
 `IMPLEMENTS` edges connect classes to the TypeScript interfaces they implement; `EXTENDS` edges connect interfaces to the interfaces they extend.
@@ -105,15 +113,15 @@ query_codebase("storage adapter interface", rels="IMPLEMENTS")
 ### Combine edge types
 
 ```python
-query_codebase("build index embedding", rels="CALLS,IMPORTS")
+query("build index embedding", rels=["CALLS", "IMPORTS"])
 ```
 
-Comma-separated `rels` expand through multiple relation types simultaneously.
+Listing several `rels` expands through multiple relation types simultaneously.
 
 ### Increase graph depth
 
 ```python
-query_codebase("error handling exception", hop=2)
+query("error handling exception", hop=2)
 ```
 
 `hop=2` follows edges two levels out from each seed. Useful when the entry point is one hop away from the interesting logic.
@@ -121,7 +129,7 @@ query_codebase("error handling exception", hop=2)
 ### Filter weak semantic seeds
 
 ```python
-query_codebase("error handling exception", min_score=0.25)
+query("error handling exception", min_score=0.25)
 ```
 
 `min_score` filters low-similarity seeds before structural expansion.
@@ -129,29 +137,21 @@ query_codebase("error handling exception", min_score=0.25)
 ### Keep module diversity
 
 ```python
-query_codebase("storage layer", max_per_module=2)
+query("storage layer", max_per_module=2)
 ```
 
 `max_per_module` (default 3) caps returned nodes per module so one file does not dominate results. Pass `0` to disable.
 
-### Get a compact Markdown table
-
-```python
-query_codebase("storage layer", format="markdown")
-```
-
-`format="markdown"` returns a ranked table instead of full JSON — easier to read in conversation context.
-
 ---
 
-## 3. Source Retrieval with `pack_snippets`
+## 3. Source Retrieval with `pack`
 
 Returns Markdown with actual source snippets, ranked and deduplicated. Use this when you need to *read* the code, not just locate it.
 
 ### Understand an implementation
 
 ```python
-pack_snippets("tree-sitter AST extraction visitor")
+pack("tree-sitter AST extraction visitor")
 ```
 
 Returns the relevant declarations with surrounding source lines.
@@ -159,7 +159,7 @@ Returns the relevant declarations with surrounding source lines.
 ### Get context for a specific concept
 
 ```python
-pack_snippets("graph expansion hop traversal", max_nodes=5)
+pack("graph expansion hop traversal", max_nodes=5)
 ```
 
 `max_nodes` limits the number of snippets returned — useful when you only need the top results.
@@ -167,7 +167,7 @@ pack_snippets("graph expansion hop traversal", max_nodes=5)
 ### Widen the snippet window
 
 ```python
-pack_snippets("schema SQL CREATE TABLE", context=15)
+pack("schema SQL CREATE TABLE", context=15)
 ```
 
 `context=` controls how many lines of context appear above and below each definition. Default is 5; raise it for dense logic.
@@ -175,7 +175,7 @@ pack_snippets("schema SQL CREATE TABLE", context=15)
 ### Cap snippet length
 
 ```python
-pack_snippets("markdown rendering output", max_lines=40)
+pack("markdown rendering output", max_lines=40)
 ```
 
 `max_lines=` prevents very long functions from dominating the output.
@@ -183,7 +183,7 @@ pack_snippets("markdown rendering output", max_lines=40)
 ### Increase semantic seeds
 
 ```python
-pack_snippets("embedding model sqlite-vec index build", k=12)
+pack("embedding model sqlite-vec index build", k=12)
 ```
 
 `k=` is the number of semantic seed nodes before graph expansion. Raise it when the first results feel off-target.
@@ -191,7 +191,7 @@ pack_snippets("embedding model sqlite-vec index build", k=12)
 ### Tighten snippet packs
 
 ```python
-pack_snippets("query expansion ranking", min_score=0.2, max_per_module=1)
+pack("query expansion ranking", min_score=0.2, max_per_module=1)
 ```
 
 Use `min_score` and `max_per_module` together to reduce noisy packs and improve cross-module coverage.
@@ -200,8 +200,8 @@ Use `min_score` and `max_per_module` together to reduce noisy packs and improve 
 
 ## 4. Pinpoint Lookup with `get_node`
 
-Fetch a single node by its stable ID. Node IDs appear in `query_codebase` and `pack_snippets` results.
-Pass `include_edges=True` to retrieve outgoing edges and incoming callers in the same call.
+Fetch a single node by its stable ID. Node IDs appear in `query` and `pack` results.
+Follow with `neighbors(node_id)` for its edges.
 
 ### Node ID format
 
@@ -226,14 +226,16 @@ get_node("fn:src/utils/helpers.ts:formatDate")
 
 Returns module path, line range, node ID, and JSDoc.
 
-### Fetch with immediate neighborhood
+### Fetch its immediate neighborhood
 
 ```python
-get_node("fn:src/utils/helpers.ts:formatDate", include_edges=True)
+neighbors("fn:src/utils/helpers.ts:formatDate")
+neighbors("fn:src/utils/helpers.ts:formatDate", rels=["CALLS"], direction="out")
 ```
 
-Also returns outgoing edges (grouped by CALLS, CONTAINS, IMPORTS, INHERITS, IMPLEMENTS, EXTENDS) and an
-"Incoming Calls" list of caller nodes. Eliminates the need for a separate `callers()` call for routine inspection.
+Returns the node's edges (CALLS, CONTAINS, IMPORTS, INHERITS, IMPLEMENTS, EXTENDS) and the nodes at
+their far ends; `direction` is `"out"`, `"in"` or `"both"` (default). Use `callers()` when you need
+callers resolved through `sym:` import stubs.
 
 ### Fetch a method
 
@@ -462,31 +464,25 @@ Cross-module references to external packages are recorded as `sym:` stub targets
 
 ## 10. Parameter Quick Reference
 
-### `query_codebase` and `pack_snippets` shared params
+### `query` and `pack` shared params
 
 | Parameter | Default | Effect |
 |---|---|---|
 | `q` | *(required)* | Natural-language query |
 | `k` | `8` | Semantic seed nodes before expansion |
 | `hop` | `1` | Graph expansion hops from each seed |
-| `rels` | `"CONTAINS,CALLS,IMPORTS,INHERITS,IMPLEMENTS,EXTENDS"` | Edge types to traverse |
+| `rels` | all six | Edge types to traverse, as a list (`["CALLS", "IMPORTS"]`); omit for CONTAINS, CALLS, IMPORTS, INHERITS, IMPLEMENTS, EXTENDS |
 | `max_nodes` | `25` / `15` | Cap returned nodes |
 | `min_score` | `0.0` | Minimum semantic seed score |
 | `max_per_module` | `3` | Cap per-module results (`0` disables) |
 | `rerank_mode` | `"hybrid"` | `hybrid` / `semantic` / `legacy` |
 
-### `pack_snippets` only
+### `pack` only
 
 | Parameter | Default | Effect |
 |---|---|---|
 | `context` | `5` | Lines above/below each definition |
 | `max_lines` | `60` | Max lines per snippet block |
-
-### `query_codebase` only
-
-| Parameter | Default | Effect |
-|---|---|---|
-| `format` | `"json"` | `json` (full metadata) or `markdown` (ranked table) |
 
 ---
 
@@ -495,7 +491,7 @@ Cross-module references to external packages are recorded as `sym:` stub targets
 ### "How does X work?"
 
 ```python
-pack_snippets("X concept or class name")
+pack("X concept or class name")
 ```
 
 ### "What calls Y?"
@@ -508,7 +504,7 @@ callers("fn:src/path.ts:Y")          # precise fan-in
 ### "What does module Z import?"
 
 ```python
-query_codebase("module Z name", rels="IMPORTS")
+query("module Z name", rels=["IMPORTS"])
 ```
 
 ### "Find all subclasses of Base"
@@ -526,7 +522,7 @@ callers("iface:src/types/path.ts:MyInterface", rel="IMPLEMENTS")
 ### "Show me the full structure of this module"
 
 ```python
-query_codebase("module name", rels="CONTAINS", hop=2)
+query("module name", rels=["CONTAINS"], hop=2)
 ```
 
 ### "Get me the source for function F"

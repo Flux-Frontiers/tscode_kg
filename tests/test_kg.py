@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from kg_utils.stats import stats_problems
 
 from tscode_kg.extractor import _HAS_TREE_SITTER
 from tscode_kg.kg import TypeScriptKG
@@ -35,20 +36,23 @@ def built_kg(tmp_repo: Path, tmp_path: Path) -> TypeScriptKG:
 class TestBuildStats:
     def test_build_returns_stats(self, built_kg: TypeScriptKG) -> None:
         stats = built_kg.stats()
-        assert stats["total_nodes"] > 0
-        assert stats["total_edges"] > 0
+        assert stats_problems(stats) == []
+        assert stats["kind"] == "code"
+        assert stats["nodes"]["total"] > 0
+        assert stats["edges"]["total"] > 0
+        assert "meaningful_nodes" in stats  # a domain measure, kept as an extra
 
     def test_class_nodes_present(self, built_kg: TypeScriptKG) -> None:
         stats = built_kg.stats()
-        assert stats["node_counts"].get("class", 0) >= 2
+        assert stats["nodes"]["by_kind"].get("class", 0) >= 2
 
     def test_function_nodes_present(self, built_kg: TypeScriptKG) -> None:
         stats = built_kg.stats()
-        assert stats["node_counts"].get("function", 0) >= 3
+        assert stats["nodes"]["by_kind"].get("function", 0) >= 3
 
     def test_interface_nodes_present(self, built_kg: TypeScriptKG) -> None:
         stats = built_kg.stats()
-        assert stats["node_counts"].get("interface", 0) >= 2
+        assert stats["nodes"]["by_kind"].get("interface", 0) >= 2
 
 
 class TestQuery:
@@ -104,12 +108,12 @@ class TestBuildVersusUpdate:
 
         kg = self._kg(tmp_repo, tmp_path)
         kg.build(wipe=True)
-        before = kg.stats()["total_nodes"]
+        before = kg.stats()["nodes"]["total"]
 
         extra.unlink()
         kg.build(wipe=False)
 
-        assert kg.stats()["total_nodes"] == before, (
+        assert kg.stats()["nodes"]["total"] == before, (
             "an upsert must not remove nodes for files that vanished"
         )
 
@@ -119,12 +123,12 @@ class TestBuildVersusUpdate:
 
         kg = self._kg(tmp_repo, tmp_path)
         kg.build(wipe=True)
-        before = kg.stats()["total_nodes"]
+        before = kg.stats()["nodes"]["total"]
 
         extra.unlink()
         kg.build(wipe=True)
 
-        assert kg.stats()["total_nodes"] < before, (
+        assert kg.stats()["nodes"]["total"] < before, (
             "a full rebuild must drop nodes for files that vanished"
         )
 
@@ -154,6 +158,6 @@ class TestGranularStages:
         staged.build_index(wipe=True)
         actual = staged.stats()
 
-        assert actual["total_nodes"] == expected["total_nodes"]
-        assert actual["total_edges"] == expected["total_edges"]
-        assert actual["node_counts"] == expected["node_counts"]
+        assert actual["nodes"]["total"] == expected["nodes"]["total"]
+        assert actual["edges"]["total"] == expected["edges"]["total"]
+        assert actual["nodes"]["by_kind"] == expected["nodes"]["by_kind"]
