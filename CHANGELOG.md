@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-11-02
+
+### Security
+
+- **The `viz` extra allows Streamlit 1.66.** It capped Streamlit below
+  1.60, and every Streamlit before 1.66.1 caps Pillow below 13, so an
+  install with `viz` stayed on Pillow 12.3.0 and its 41 advisories. The cap
+  is now `<1.67`; the floor is unchanged.
+- **Lock refresh** (#33): Pillow 13.0.0, Streamlit 1.66.1, certifi
+  2026.10.23, filelock 4.2.7, setuptools 84.2.1 and virtualenv 21.15.2,
+  clearing the 56 open Dependabot alerts.
+
 ## [0.8.0] - 2026-10-26
 
 ### Changed
