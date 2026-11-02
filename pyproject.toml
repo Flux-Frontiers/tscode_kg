@@ -84,7 +84,7 @@ dependencies = [
 viz = [
     "plotly>=6.8.0,<6.9",
     "pyvis>=0.3.2,<0.4",
-    "streamlit>=1.59.0,<1.60",
+    "streamlit>=1.59.0,<1.67",
 ]
 # PyVista/PyQt5 3-D visualizer.
 # NOTE: deliberately plain `pyvista`, not `pyvista[jupyter]` — the jupyter
