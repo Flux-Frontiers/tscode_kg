@@ -1,28 +1,40 @@
-# Release Notes -- v0.8.1
+# Release Notes -- v0.8.2
 
-> Released: 2026-11-02
+> Released: 2026-11-14
 
-TSCodeKG 0.8.1 is a security release. The `viz` extra capped Streamlit below
-1.60, and every Streamlit before 1.66.1 caps Pillow below 13, so an install
-with `viz` was held on Pillow 12.3.0 and its 41 advisories, some of them
-critical. The cap now allows Streamlit 1.66, which allows Pillow 13. Nothing
-else changes.
+TSCodeKG 0.8.2 fixes how calls are counted. A CALLS edge always pointed at a
+function in the calling file, so anything used only from another module, and
+every React component used only as JSX, had no callers and was reported as
+an orphan. On a 93-module React app, orphaned declarations fall from 294 to
+54.
 
 ## What changed
 
-**The `viz` extra allows Streamlit 1.66.** The range is now
-`streamlit>=1.59.0,<1.67`. The floor is unchanged; only the cap moved, far
-enough to reach the first Streamlit that accepts a patched Pillow. The
-Streamlit app was checked under 1.66.1.
+**Calls across files are resolved.** A call to a name bound by a relative
+import (named, aliased or default) now points at the function in the file
+that defines it.
 
-**The lock is refreshed.** Pillow 13.0.0, Streamlit 1.66.1, certifi,
-filelock, setuptools and virtualenv move to patched releases, which clears
-every open Dependabot alert.
+**JSX elements count as calls.** `<Badge />` is a CALLS edge to `Badge`.
+Lowercase intrinsic tags such as `<div>` are not.
+
+**Extensionless imports find `.tsx` and `index` files.** `./Card` resolved
+to `Card.ts` even when only `Card.tsx` exists, leaving the IMPORTS edge
+pointing at nothing.
+
+**The analysis report states the configured scope.** `tscodekg analyze`
+printed "Included directories: all" regardless of `[tool.tscodekg]`. It now
+reads `include` and `exclude` from pyproject.toml.
+
+## Known limits
+
+Calls at module top level (outside any function), such as
+`root.render(<App />)`, and components passed as values, such as
+`{ flame: FlameOfKnowledge }`, still produce no CALLS edge.
 
 ## Upgrading
 
-`pip install -U "tscode-kg[viz]"` moves Streamlit and Pillow forward. No
-command, tool or index changes, so existing graphs stay valid.
+`pip install -U tscode-kg`, then rebuild with `tscodekg build` so existing
+graphs pick up the new edges. No command or tool changes.
 
 ---
 
