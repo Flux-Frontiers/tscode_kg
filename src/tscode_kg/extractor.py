@@ -104,6 +104,7 @@ _NAMESPACE = frozenset({"module_declaration", "internal_module", "namespace_decl
 _METHOD_LIKE = frozenset({"method_definition", "method_signature", "public_field_definition"})
 _FUNCTION_LIKE = frozenset({"function_declaration", "generator_function_declaration"})
 _CALL_EXPR = frozenset({"call_expression", "new_expression"})
+_JSX_ELEMENT = frozenset({"jsx_opening_element", "jsx_self_closing_element"})
 
 
 # ---------------------------------------------------------------------------
@@ -201,6 +202,42 @@ def _resolve_import_path(importing_file: str, raw_spec: str) -> str:
     return resolved
 
 
+def _find_module(path: str, defined: set[str]) -> str | None:
+    """Return the indexed module file an import path refers to, or None.
+
+    :param path: Repo-relative path from :func:`_resolve_import_path`, which
+        guesses ``.ts`` for an extensionless import; this tries the other
+        extensions and ``index`` files, as the TypeScript resolver does.
+    :param defined: Every node id emitted for the repo.
+    """
+    if _make_node_id("module", path) in defined:
+        return path
+    stem = str(Path(path).with_suffix(""))
+    for ext in sorted(TS_EXTENSIONS):
+        for candidate in (stem + ext, f"{stem}/index{ext}"):
+            if _make_node_id("module", candidate) in defined:
+                return candidate
+    return None
+
+
+def _resolve_call(walker: _FileWalker, target_id: str, defined: set[str]) -> str | None:
+    """Return the node id of an imported function a CALLS edge names, or None.
+
+    :param walker: The walker for the calling file, holding its import map.
+    :param target_id: The same-file ``fn:`` id the walker emitted.
+    :param defined: Every node id emitted for the repo.
+    """
+    name = target_id.rsplit(":", 1)[-1]
+    if name not in walker.imports:
+        return None
+    path, exported = walker.imports[name]
+    module = _find_module(path, defined)
+    if module is None:
+        return None
+    candidate = _make_node_id("function", module, exported)
+    return candidate if candidate in defined else None
+
+
 # ---------------------------------------------------------------------------
 # Per-file walker
 # ---------------------------------------------------------------------------
@@ -215,6 +252,9 @@ class _FileWalker:
         self.root = tree.root_node
         self._mod_id = _make_node_id("module", rel_path)
         self._emitted: list[NodeSpec | EdgeSpec] = []
+        #: Local name -> (imported module path, exported name) for relative
+        #: imports; used to point CALLS edges at the defining file.
+        self.imports: dict[str, tuple[str, str]] = {}
 
     # ------------------------------------------------------------------
     # Public interface
@@ -325,9 +365,31 @@ class _FileWalker:
             target_id = target
         else:
             target_id = _make_node_id("module", target)
+            self._record_import_names(node, target)
         self._emitted.append(
             EdgeSpec(source_id=self._mod_id, target_id=target_id, relation="IMPORTS")
         )
+
+    def _record_import_names(self, node: Any, target: str) -> None:
+        """Map each locally bound import name to ``(target, exported name)``.
+
+        A default import is assumed to share its name with the default export.
+        """
+        for clause in node.children:
+            if clause.type != "import_clause":
+                continue
+            for part in clause.children:
+                if part.type == "identifier":
+                    local = _node_text(part, self.source)
+                    self.imports[local] = (target, local)
+                elif part.type == "named_imports":
+                    for spec in part.children:
+                        if spec.type != "import_specifier":
+                            continue
+                        name = _child_text(spec, "name", self.source)
+                        alias = _child_text(spec, "alias", self.source) or name
+                        if name:
+                            self.imports[alias] = (target, name)
 
     # ------------------------------------------------------------------
     # Class handling
@@ -683,8 +745,12 @@ class _FileWalker:
     # ------------------------------------------------------------------
 
     def _collect_calls(self, body_node: Any, depth: int = 0) -> list[str]:
-        """Recursively collect directly-called function names (simple identifiers only)."""
-        if depth > 10:
+        """Recursively collect directly-called function names (simple identifiers only).
+
+        A capitalized JSX element (``<Badge />``) counts as a call to ``Badge``;
+        lowercase elements are intrinsic HTML tags and are skipped.
+        """
+        if depth > 100:
             return []
         calls: list[str] = []
         for child in body_node.children:
@@ -693,6 +759,12 @@ class _FileWalker:
                 if fn_node is not None and fn_node.type == "identifier":
                     name = _node_text(fn_node, self.source)
                     if re.match(r"^[A-Za-z_$][A-Za-z0-9_$]*$", name):
+                        calls.append(name)
+            elif child.type in _JSX_ELEMENT:
+                tag = child.child_by_field_name("name")
+                if tag is not None and tag.type == "identifier":
+                    name = _node_text(tag, self.source)
+                    if name[:1].isupper():
                         calls.append(name)
             calls.extend(self._collect_calls(child, depth + 1))
         return calls
@@ -813,6 +885,7 @@ class TSCodeExtractor(KGExtractor):
             )
 
         files = _find_ts_files(self.repo_path, self._include, self._exclude)
+        walked: list[tuple[_FileWalker, list[NodeSpec | EdgeSpec]]] = []
         for abs_path in files:
             try:
                 rel_path = str(abs_path.relative_to(self.repo_path)).replace("\\", "/")
@@ -822,6 +895,31 @@ class TSCodeExtractor(KGExtractor):
                 parser = Parser(lang)
                 tree = parser.parse(source)
                 walker = _FileWalker(rel_path, source, tree)
-                yield from walker.walk()
+                walked.append((walker, walker.walk()))
             except Exception:  # noqa: BLE001
                 continue
+
+        # Second pass: with every file's nodes known, point IMPORTS edges at
+        # the real module file and CALLS edges at the file that defines the
+        # imported name.
+        defined = {
+            item.node_id for _, items in walked for item in items if isinstance(item, NodeSpec)
+        }
+        for walker, items in walked:
+            for item in items:
+                if isinstance(item, EdgeSpec) and item.target_id not in defined:
+                    if item.relation == "IMPORTS" and item.target_id.startswith("mod:"):
+                        module = _find_module(item.target_id[len("mod:") :], defined)
+                        if module:
+                            item = EdgeSpec(
+                                source_id=item.source_id,
+                                target_id=_make_node_id("module", module),
+                                relation="IMPORTS",
+                            )
+                    elif item.relation == "CALLS":
+                        target = _resolve_call(walker, item.target_id, defined)
+                        if target:
+                            item = EdgeSpec(
+                                source_id=item.source_id, target_id=target, relation="CALLS"
+                            )
+                yield item

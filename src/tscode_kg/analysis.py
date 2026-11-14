@@ -46,6 +46,8 @@ from pathlib import Path
 from kg_utils.stats import flat_stats
 from rich.console import Console
 
+from tscode_kg.config import load_exclude_dirs, load_include_dirs
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -129,7 +131,9 @@ class TSCodeKGAnalyzer:
     :param console: Rich console for terminal output (creates new if None)
     :param snapshot_mgr: Optional SnapshotManager for temporal history
     :param include_dirs: Directories included in the indexed build
+        (default: ``[tool.tscodekg] include`` from the repo's pyproject.toml)
     :param exclude_dirs: Directories excluded from the indexed build
+        (default: ``[tool.tscodekg] exclude`` from the repo's pyproject.toml)
     """
 
     _TOTAL_PHASES = 14
@@ -145,8 +149,12 @@ class TSCodeKGAnalyzer:
         self.kg = kg
         self.console = console or Console()
         self.snapshot_mgr = snapshot_mgr
-        self.include_dirs: set[str] = include_dirs or set()
-        self.exclude_dirs: set[str] = exclude_dirs or set()
+        if include_dirs is None:
+            include_dirs = load_include_dirs(kg.repo_root)
+        if exclude_dirs is None:
+            exclude_dirs = load_exclude_dirs(kg.repo_root)
+        self.include_dirs: set[str] = include_dirs
+        self.exclude_dirs: set[str] = exclude_dirs
 
         # Phase results
         self.stats: dict = {}

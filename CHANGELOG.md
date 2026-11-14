@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Calls across files are resolved.** A CALLS edge always pointed at a
+  function in the calling file, so a function used only from another module
+  had no callers and was reported as an orphan. Calls to a name bound by a
+  relative import (named, aliased or default) now point at the defining file.
+- **JSX elements count as calls.** `<Badge />` is a CALLS edge to `Badge`;
+  lowercase intrinsic tags are not. The call collector's depth limit rose
+  from 10 to 100 so deeply nested JSX is reached.
+- **Extensionless imports find `.tsx` and `index` files.** `./Card` resolved
+  to `Card.ts` even when only `Card.tsx` exists, leaving the IMPORTS edge
+  dangling.
+- **The analysis report states the configured scope.** `tscodekg analyze`
+  printed "Included directories: all" regardless of `[tool.tscodekg]`; the
+  analyzer now reads `include` and `exclude` from pyproject.toml when not
+  given them.
+
+On knowledge_press's web app, orphaned declarations fell from 294 to 54.
+
 ## [0.8.1] - 2026-11-02
 
 ### Security
