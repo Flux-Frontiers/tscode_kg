@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-11-14
+
 ### Fixed
 
 - **Calls across files are resolved.** A CALLS edge always pointed at a
