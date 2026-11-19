@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Flux-Frontiers/tscode_kg/main/assets/tscodekg_banner.png" alt="TSCodeKG" width="720"/>
+</p>
+
 # TypeScriptKG
 
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
